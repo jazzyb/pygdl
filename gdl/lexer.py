@@ -6,14 +6,39 @@ class NoInputError(Exception):
 
 
 class Lexeme(object):
-    def __init__(self, filename, line, col=-1, token=''):
+    def __init__(self, filename, line, lineno, col=-1, token=''):
         self.token = token
         self.filename = filename
-        self.lineno = line
+        self.line = line
+        self.lineno = lineno
         self.column = col
+
+    def set(self, filename=None, line=None, lineno=None, column=None, token=None):
+        if filename:
+            self.filename = filename
+        if line:
+            self.line = line
+        if lineno:
+            self.lineno = lineno
+        if column:
+            self.column = column
+        if token:
+            self.token = token
 
     def is_empty(self):
         return self.column == -1 or self.token == ''
+
+    def is_open(self):
+        return self.token == '('
+
+    def is_close(self):
+        return self.token == ')'
+
+    def is_variable(self):
+        return self.token[0] == '?'
+
+    def is_constant(self):
+        return self.token[0] not in ('?', '(', ')')
 
 
 class Lexer(object):
@@ -22,7 +47,7 @@ class Lexer(object):
         self.tokens = []
         self.wsre = re.compile(r'\s')
 
-    def parse(self, data=None):
+    def lex(self, data=None):
         if self.fp is None:
             if data is None:
                 raise NoInputError('no input to tokenize')
@@ -32,44 +57,43 @@ class Lexer(object):
             self.lines = self.fp
             self.filename = self.fp.name
 
-        return self._parse_input()
+        return self._lex_input()
 
-    def _parse_input(self):
+    def _lex_input(self):
         row = 0
         for line in self.lines:
             row += 1
-            self._parse_line(line, row)
+            self._lex_line(line, row)
 
         if self.tokens[-1].is_empty():
             self.tokens.pop()
         return self.tokens
 
-    def _parse_line(self, line, row):
+    def _lex_line(self, line, row):
         col = 0
         for char in line:
             col += 1
-            self._process_char(char, row, col)
+            if char == ';':
+                break
+            self._process_char(char.lower(), line, row, col)
 
-    def _process_char(self, char, row, col):
+    def _process_char(self, char, line, row, col):
         last_token = self.tokens[-1] if self.tokens else None
         if self._is_whitespace(char):
             if last_token is None or not last_token.is_empty():
-                self.tokens.append(Lexeme(self.filename, row))
+                self.tokens.append(Lexeme(self.filename, line, row))
         elif char == '(' or char == ')':
             if last_token is not None and last_token.is_empty():
-                last_token.token = char
-                last_token.lineno = row
-                last_token.column = col
+                last_token.set(token=char, line=line, lineno=row, column=col)
             else:
-                self.tokens.append(Lexeme(self.filename, row, col, char))
-            self.tokens.append(Lexeme(self.filename, row))
+                self.tokens.append(Lexeme(self.filename, line, row, col, char))
+            self.tokens.append(Lexeme(self.filename, line, row))
         else:
             if last_token is None:
-                last_token = Lexeme(self.filename, row, col)
+                last_token = Lexeme(self.filename, line, row, col)
                 self.tokens.append(last_token)
             if last_token.is_empty():
-                last_token.lineno = row
-                last_token.column = col
+                last_token.set(line=line, lineno=row, column=col)
             last_token.token += char
 
     def _is_whitespace(self, char):
