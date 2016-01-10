@@ -74,7 +74,7 @@ class TestLexer(unittest.TestCase):
                              (parent ?a ?b)
                              (ancestor ?b ?c))
                  ''')
-        tokens = list((t.token, t.lineno, t.column) for t in Lexer(fp).lex())
+        tokens = list((t.token, t.lineno, t.column) for t in Lexer().lex(file=fp))
         self.assertEqual(tokens, answer)
 
     def test_lex_no_input_error(self):

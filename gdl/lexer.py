@@ -42,20 +42,19 @@ class Lexeme(object):
 
 
 class Lexer(object):
-    def __init__(self, fp=None):
-        self.fp = fp
+    def __init__(self):
         self.tokens = []
         self.wsre = re.compile(r'\s')
 
-    def lex(self, data=None):
-        if self.fp is None:
+    def lex(self, data=None, file=None):
+        if file is None:
             if data is None:
                 raise NoInputError('no input to tokenize')
             self.lines = data.splitlines(True)
             self.filename = None
         else:
-            self.lines = self.fp
-            self.filename = self.fp.name
+            self.lines = file
+            self.filename = file.name
 
         return self._lex_input()
 

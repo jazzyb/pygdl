@@ -1,19 +1,8 @@
-import os
+from gdl.error import GDLError
 
 
-class ParseError(Exception):
-    EXPECTED_CONSTANT = 'A constant was expected.'
-    UNEXPECTED_CLOSE = 'Unexpected closed parenthesis.'
-
-    def __init__(self, message, token):
-        errmsg = message + os.linesep + self._errmsg(token)
-        super(ParseError, self).__init__(errmsg)
-
-    def _errmsg(self, token):
-        lineno = '%d: ' % token.lineno
-        nspaces = len(lineno) + token.column - 1
-        err = lineno + token.line.rstrip() + os.linesep + (' ' * nspaces) + '^'
-        return err
+class ParseError(GDLError):
+    pass
 
 
 class ASTNode(object):
@@ -27,6 +16,14 @@ class ASTNode(object):
         self.children.append(child)
         return child
 
+    @property
+    def term(self):
+        return self.token.token
+
+    @property
+    def arity(self):
+        return len(self.children)
+
 
 class Parser(object):
     def __init__(self):
@@ -38,7 +35,7 @@ class Parser(object):
         for token in tokens:
             if new_sentence:
                 if not token.is_constant():
-                    raise ParseError(ParseError.EXPECTED_CONSTANT, token)
+                    raise ParseError(GDLError.EXPECTED_CONSTANT, token)
                 curr = curr.create_child(token)
                 new_sentence = False
             elif token.is_open():
@@ -46,7 +43,7 @@ class Parser(object):
             elif token.is_close():
                 curr = curr.parent
                 if curr is None:
-                    raise ParseError(ParseError.UNEXPECTED_CLOSE, token)
+                    raise ParseError(GDLError.UNEXPECTED_CLOSE, token)
             else:
                 curr.create_child(token)
         return self.head

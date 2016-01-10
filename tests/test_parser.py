@@ -30,13 +30,13 @@ class TestParser(unittest.TestCase):
         ast_head = Parser().parse(self.tokens)
         self.assertEqual('<=', ast_head.children[0].token.token)
         self.assertEqual(1, len(ast_head.children))
-        tokens = [c.token.token for c in ast_head.children[0].children]
+        tokens = [c.term for c in ast_head.children[0].children]
         self.assertEqual(['ancestor', 'parent', 'ancestor'], tokens)
-        tokens = [c.token.token for c in ast_head.children[0].children[0].children]
+        tokens = [c.term for c in ast_head.children[0].children[0].children]
         self.assertEqual(['?a', '?c'], tokens)
-        tokens = [c.token.token for c in ast_head.children[0].children[1].children]
+        tokens = [c.term for c in ast_head.children[0].children[1].children]
         self.assertEqual(['?a', '?b'], tokens)
-        tokens = [c.token.token for c in ast_head.children[0].children[2].children]
+        tokens = [c.term for c in ast_head.children[0].children[2].children]
         self.assertEqual(['?b', '?c'], tokens)
 
     def test_constant_expected_parse_error(self):
