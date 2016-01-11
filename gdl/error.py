@@ -5,6 +5,8 @@ class GDLError(Exception):
     EXPECTED_CONSTANT = 'A constant was expected.'
     UNEXPECTED_CLOSE = 'Unexpected closed parenthesis.'
     BAD_RELATION = "The builtin relation '%s/%d' has the wrong arity."
+    FACT_VARIABLE = 'Variables are not allowed in facts.'
+    NO_RULE = "No such rule '%s/%d'."
 
     def __init__(self, message, token):
         errmsg = message + os.linesep + self._errmsg(token)
