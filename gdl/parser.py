@@ -1,28 +1,9 @@
+from gdl.ast import ASTNode
 from gdl.error import GDLError
 
 
 class ParseError(GDLError):
     pass
-
-
-class ASTNode(object):
-    def __init__(self, token=None, parent=None):
-        self.parent = parent
-        self.token = token
-        self.children = []
-
-    def create_child(self, token):
-        child = ASTNode(token, self)
-        self.children.append(child)
-        return child
-
-    @property
-    def term(self):
-        return self.token.token
-
-    @property
-    def arity(self):
-        return len(self.children)
 
 
 class Parser(object):
