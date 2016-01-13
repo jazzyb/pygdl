@@ -7,33 +7,47 @@ class DatalogError(GDLError):
 
 class Database(object):
     def __init__(self):
-        self.db = {}
+        self.facts = {}
+        self.derived_facts = {}
+        self.rules = {}
 
     def define_fact(self, term, arity, args):
-        key = (term, arity)
-        if key not in self.db:
-            self.db[key] = []
         self._sanity_check_fact_arguments(args)
-        self.db[key].append((args, []))
+        self.facts.setdefault((term, arity), []).append(args)
+
+    def define_rule(self, term, arity, args, body):
+        self._sanity_check_new_rule(term, arity, args, body)
+        key = (term, arity)
+        self.rules.setdefault(key, []).append((args, body))
+        self.derived_facts.pop(key, None)
 
     def query(self, ast_head):
         key = (ast_head.term, ast_head.arity)
-        if key not in self.db:
-            raise DatalogError(GDLError.NO_RULE % key, ast_head.token)
+        if key not in self.facts and key not in self.rules:
+            raise DatalogError(GDLError.NO_PREDICATE % key, ast_head.token)
 
-        ret = []
-        for args, body in self.db[key]:
-            if not body:
-                match = self._compare_fact(ast_head.children, args)
-                if match is True:
-                    return True
-                elif match:
-                    ret.append(match)
-        return ret if ret else False
+        f = self._find_facts(self.facts.get(key, []), ast_head.children)
+        if f is True:
+            return True
+        r = self._derive_facts(key, ast_head.children)
+        if r is True:
+            return True
+
+        results = f + r
+        return results if results else False
+
+    def _find_facts(self, table, query):
+        results = []
+        for args in table:
+            match = self._compare_fact(query, args)
+            if match is True:
+                return True
+            elif match:
+                results.append(match)
+        return results
 
     def _compare_fact(self, query_args, fact_args, matches=None):
-        if matches is None:
-            matches = {}
+        matches = matches or {}
         for query, fact in zip(query_args, fact_args):
             if query.is_variable():
                 if query.term in matches:
@@ -48,6 +62,18 @@ class Database(object):
                 return False
         return matches if matches else True
 
+    def _derive_facts(self, key, query):
+        if key in self.derived_facts:
+            return self._find_facts(self.derived_facts[key], query)
+        self._process_rules(key)
+        return self._find_facts(self.derived_facts.get(key, []), query)
+
+    def _process_rules(self, key):
+        for args, body in self.rules.get(key, []):
+            variables = self._process_rule_body(body)
+            if variables is not False:
+                pass
+
     def _sanity_check_fact_arguments(self, args):
         if type(args) is not list:
             raise TypeError('fact arguments should be a list')
@@ -56,3 +82,6 @@ class Database(object):
                 self._sanity_check_fact_arguments(arg.children)
             if arg.is_variable():
                 raise DatalogError(GDLError.FACT_VARIABLE, arg.token)
+
+    def _sanity_check_new_rule(self, term, arity, args, body):
+        pass # TODO

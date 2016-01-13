@@ -52,6 +52,22 @@ class TestDatabase(unittest.TestCase):
         self.db.define_fact('bar', 2, [make_mock_node('1'),
             make_mock_node('x', [make_mock_node(x) for x in ('2', '3')])])
 
+        # RULES
+        # Datalog 2.5
+        # > path(X,Y) :- path(X,Z), link(Z,Y).
+        # > path(X,Y) :- link(X,Y).
+        # > link(3,4).
+        # > link(2,3).
+        # > link(1,2).
+        path = make_mock_node('path', [make_mock_node(x) for x in ('?x', '?z')])
+        link = make_mock_node('link', [make_mock_node(x) for x in ('?z', '?y')])
+        self.db.define_rule('path', 2, [make_mock_node(x) for x in ('?x', '?y')], [path, link])
+        link = make_mock_node('link', [make_mock_node(x) for x in ('?x', '?y')])
+        self.db.define_rule('path', 2, [make_mock_node(x) for x in ('?x', '?y')], [link])
+        self.db.define_fact('link', 2, [make_mock_node(x) for x in ('3', '4')])
+        self.db.define_fact('link', 2, [make_mock_node(x) for x in ('2', '3')])
+        self.db.define_fact('link', 2, [make_mock_node(x) for x in ('1', '2')])
+
     def test_fact_list_error(self):
         with self.assertRaises(TypeError):
             Database().define_fact('foo', 2, (1, 2))
@@ -98,3 +114,9 @@ class TestDatabase(unittest.TestCase):
         foo = make_mock_node('foo', args)
         results = [{k: d[k].term for k in d} for d in self.db.query(foo)]
         self.assertEqual(answer, results)
+
+    # > path(1,4)?
+    # path(1, 4).
+#    def test_rule_success(self):
+#        query = make_mock_node('path', [make_mock_node('1'), make_mock_node('4')])
+#        self.assertTrue(self.db.query(query))
