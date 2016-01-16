@@ -24,7 +24,7 @@ class Database(object):
         key = (term, arity)
         self.rules.setdefault(key, []).append((args, body))
         self._set_rule_requirements(key, body)
-        self._delete_derived_facts([key])
+        self._delete_derived_facts(key)
 
     def query(self, ast_head):
         key = (ast_head.term, ast_head.arity)
@@ -49,8 +49,16 @@ class Database(object):
             if req != rule:
                 self.requirements.setdefault(req, set()).add(rule)
 
-    def _delete_derived_facts(self, keys):
-        pass
+    def _delete_derived_facts(self, key):
+        for rule in self._collect_requirements(key, [key]):
+            self.derived_facts.pop(rule, None)
+
+    def _collect_requirements(self, key, keys):
+        for rule in self.requirements.get(key, []):
+            if rule not in keys:
+                keys.append(rule)
+                self._collect_requirements(rule, keys)
+        return keys
 
     def _find_facts(self, table, query, variables=None):
         results = []

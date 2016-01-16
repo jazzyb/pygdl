@@ -157,3 +157,13 @@ class TestDatabase(unittest.TestCase):
         query = make_mock_node('p', [make_mock_node('?x')])
         results = [{k: d[k].term for k in d} for d in self.db.query(query)]
         self.assertEqual(results, answer)
+
+    def test_rule_redefinition_deletes_old_facts(self):
+        answer = [{'?x': '1'}, {'?x': '2'}]
+        query = make_mock_node('p', [make_mock_node('?x')])
+        self.db.query(query)
+        self.db.define_rule('p', 1,
+                [make_mock_node('?x')],
+                [make_mock_node('s', [make_mock_node('?x')])])
+        results = [{k: d[k].term for k in d} for d in self.db.query(query)]
+        self.assertEqual(results, answer)
