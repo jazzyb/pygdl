@@ -13,19 +13,25 @@ class MockToken(object):
     def is_variable(self):
         return self.token[0] == '?'
 
+    def copy(self):
+        return MockToken(self.token)
+
 
 class MockNode(object):
     def __init__(self, token, children=None):
         self.token = token
         self.children = children if children else []
         self.arity = len(self.children)
-        self.term = token.token
+
+    @property
+    def term(self):
+        return self.token.token
 
     def is_variable(self):
         return self.token.is_variable()
 
     def copy(self):
-        return MockNode(self.token, [x.copy() for x in self.children])
+        return MockNode(self.token.copy(), [x.copy() for x in self.children])
 
     def __eq__(self, other):
         if (self.term, self.arity) != (other.term, other.arity):
@@ -34,6 +40,9 @@ class MockNode(object):
             if a != b:
                 return False
         return True
+
+    def __repr__(self):
+        return self.term
 
 
 def make_mock_node(token, children=None):
@@ -67,6 +76,22 @@ class TestDatabase(unittest.TestCase):
         self.db.define_fact('link', 2, [make_mock_node(x) for x in ('3', '4')])
         self.db.define_fact('link', 2, [make_mock_node(x) for x in ('2', '3')])
         self.db.define_fact('link', 2, [make_mock_node(x) for x in ('1', '2')])
+
+        # CYCLICAL RECURSION
+        # Datalog 2.5
+        # > s(1).
+        # > s(2).
+        # > t(1).
+        # > p(X) :- q(X), s(X).
+        # > q(X) :- p(X), t(X).
+        # > q(X) :- t(X).
+        self.db.define_fact('s', 1, [make_mock_node('1')])
+        self.db.define_fact('s', 1, [make_mock_node('2')])
+        self.db.define_fact('t', 1, [make_mock_node('1')])
+        p, q, s, t = [make_mock_node(x, [make_mock_node('?x')]) for x in ('p', 'q', 's', 't')]
+        self.db.define_rule('p', 1, [make_mock_node('?x')], [q, s])
+        self.db.define_rule('q', 1, [make_mock_node('?x')], [p, t])
+        self.db.define_rule('q', 1, [make_mock_node('?x')], [t])
 
     def test_fact_list_error(self):
         with self.assertRaises(TypeError):
@@ -117,6 +142,18 @@ class TestDatabase(unittest.TestCase):
 
     # > path(1,4)?
     # path(1, 4).
-#    def test_rule_success(self):
-#        query = make_mock_node('path', [make_mock_node('1'), make_mock_node('4')])
-#        self.assertTrue(self.db.query(query))
+    def test_rule_success(self):
+        query = make_mock_node('path', [make_mock_node('1'), make_mock_node('4')])
+        self.assertTrue(self.db.query(query))
+
+    def test_rule_failure(self):
+        query = make_mock_node('path', [make_mock_node('4'), make_mock_node('?x')])
+        self.assertFalse(self.db.query(query))
+
+    # > p(X)?
+    # p(1).
+    def test_rule_cyclical_recursion(self):
+        answer = [{'?x': '1'}]
+        query = make_mock_node('p', [make_mock_node('?x')])
+        results = [{k: d[k].term for k in d} for d in self.db.query(query)]
+        self.assertEqual(results, answer)

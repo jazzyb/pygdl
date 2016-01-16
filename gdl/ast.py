@@ -21,7 +21,7 @@ class ASTNode(object):
         return self.token.is_variable()
 
     def copy(self, parent=None):
-        head = ASTNode(self.token, parent)
+        head = ASTNode(self.token.copy(), parent)
         head.children = [child.copy(head) for child in self.children]
         return head
 

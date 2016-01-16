@@ -40,6 +40,9 @@ class Lexeme(object):
     def is_constant(self):
         return self.token[0] not in ('?', '(', ')')
 
+    def copy(self):
+        return Lexeme(self.filename, self.line, self.lineno, self.column, self.token)
+
 
 class Lexer(object):
     def __init__(self):

@@ -10,6 +10,9 @@ class MockToken(object):
         self.lineno = lineno,
         self.column = col
 
+    def copy(self):
+        return MockToken(self.filename, self.line, self.lineno, self.column, self.token)
+
 
 class TestASTNode(unittest.TestCase):
     def _new_tree(self):
@@ -30,6 +33,8 @@ class TestASTNode(unittest.TestCase):
         legal.children = []
         self.assertEqual([child.term for child in copy.children], ['?player', '?move'])
         self.assertEqual([child.parent for child in copy.children], [copy] * 2)
+        legal.token.token = 'foo'
+        self.assertEqual(copy.term, 'legal')
 
     def test_eqality(self):
         a = self._new_tree()
