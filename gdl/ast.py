@@ -45,6 +45,8 @@ class ASTNode(object):
         ret = ''
         if self.arity > 0:
             ret += '('
+        if self.is_neg():
+            ret += '~'
         ret += self.term
         for child in self.children:
             ret += ' '

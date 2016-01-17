@@ -16,6 +16,9 @@ class MockToken(object):
     def is_close(self):
         return self.token == ')'
 
+    def is_not(self):
+        return self.token == 'not'
+
     def is_variable(self):
         return self.token[0] == '?'
 
@@ -38,6 +41,26 @@ class TestParser(unittest.TestCase):
         self.assertEqual(['?a', '?b'], tokens)
         tokens = [c.term for c in ast_head.children[0].children[2].children]
         self.assertEqual(['?b', '?c'], tokens)
+
+    def test_not(self):
+        tokens = ['(', '<=', '(', 'not-path', '?x', '?y', ')', '(', 'not',
+                '(', 'path', '?x', '?y', ')', ')', ')']
+        self.tokens = [MockToken(None, None, None, None, t) for t in tokens]
+        ast = Parser().parse(self.tokens)
+        self.assertEqual('path', ast.children[0].children[1].term)
+        self.assertTrue(ast.children[0].children[1].is_neg())
+
+    def test_double_negative(self):
+        errmsg = '''Double negatives aren't not disallowed.
+1: (<= (not-path ?x ?y) (x ?x) (x ?y) (not (not (path ?x ?y))))
+                                            ^'''
+        line = '(<= (not-path ?x ?y) (x ?x) (x ?y) (not (not (path ?x ?y))))'
+        tokens = ['(', '<=', '(', 'not-path', '?x', '?y', ')', '(', 'not',
+                '(', 'not', '(', 'path', '?x', '?y', ')', ')', ')', ')']
+        tokens = [MockToken(None, line, 1, 42, t) for t in tokens]
+        with self.assertRaises(ParseError) as cm:
+            Parser().parse(tokens)
+        self.assertEqual(str(cm.exception), errmsg)
 
     def test_constant_expected_parse_error(self):
         errmsg = '''A constant was expected.

@@ -7,6 +7,7 @@ class GDLError(Exception):
     BAD_RELATION = "The builtin relation '%s/%d' has the wrong arity."
     FACT_VARIABLE = 'Variables are not allowed in facts.'
     NO_PREDICATE = "No such predicate '%s/%d'."
+    DOUBLE_NOT = "Double negatives aren't not disallowed."
 
     def __init__(self, message, token):
         errmsg = message + os.linesep + self._errmsg(token)

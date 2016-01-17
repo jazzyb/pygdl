@@ -64,14 +64,18 @@ class Database(object):
         results = []
         for args in table:
             var_copy = None if variables is None else variables.copy()
-            match = self._compare_fact(query, args, var_copy, neg)
+            if neg:
+                match = self._neg_compare_fact(query, args, var_copy)
+            else:
+                match = self._compare_fact(query, args, var_copy)
+
             if match is True:
                 return True
             elif match:
                 results.append(match)
         return results
 
-    def _compare_fact(self, query_args, fact_args, matches=None, neg=False):
+    def _compare_fact(self, query_args, fact_args, matches=None):
         matches = matches or {}
         for query, fact in zip(query_args, fact_args):
             if query.is_variable():
@@ -81,11 +85,25 @@ class Database(object):
                 else:
                     matches[query.term] = fact.copy()
             elif query.term == fact.term and query.arity == fact.arity:
-                if self._compare_fact(query.children, fact.children, matches, neg) is False:
+                if self._compare_fact(query.children, fact.children, matches) is False:
                     return False
             else:
                 return False
         return matches if matches else True
+
+    def _neg_compare_fact(self, query_args, fact_args, matches=None):
+        matches = matches or {}
+        for query, fact in zip(query_args, fact_args):
+            if query.is_variable():
+                assert query.term in matches
+                if matches[query.term] != fact:
+                    return True
+            elif query.term == fact.term and query.arity == fact.arity:
+                if self._neg_compare_fact(query.children, fact.children, matches):
+                    return True
+            else:
+                return True
+        return False
 
     def _derive_facts(self, key, query):
         if key not in self.rules:

@@ -173,9 +173,13 @@ class TestDatabase(unittest.TestCase):
         query = make_mock_node('path', [make_mock_node('4'), make_mock_node('?x')])
         self.assertFalse(self.db.query(query))
 
-#    def test_literal_negation(self):
-#        query = make_mock_node('not-path', [make_mock_node('4'), make_mock_node('1')])
-#        self.assertTrue(self.db.query(query))
+    def test_literal_negation_success(self):
+        query = make_mock_node('not-path', [make_mock_node('4'), make_mock_node('1')])
+        self.assertTrue(self.db.query(query))
+
+    def test_literal_negation_failure(self):
+        query = make_mock_node('not-path', [make_mock_node('1'), make_mock_node('3')])
+        self.assertFalse(self.db.query(query))
 
     # > p(X)?
     # p(1).

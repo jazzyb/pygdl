@@ -34,6 +34,9 @@ class Lexeme(object):
     def is_close(self):
         return self.token == ')'
 
+    def is_not(self):
+        return self.token == 'not'
+
     def is_variable(self):
         return self.token[0] == '?'
 
