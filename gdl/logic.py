@@ -60,15 +60,11 @@ class Database(object):
                 self._collect_requirements(rule, keys)
         return keys
 
-    def _find_facts(self, table, query, variables=None, neg=False):
+    def _find_facts(self, table, query, variables=None):
         results = []
         for args in table:
             var_copy = None if variables is None else variables.copy()
-            if neg:
-                match = self._neg_compare_fact(query, args, var_copy)
-            else:
-                match = self._compare_fact(query, args, var_copy)
-
+            match = self._compare_fact(query, args, var_copy)
             if match is True:
                 return True
             elif match:
@@ -91,20 +87,6 @@ class Database(object):
                 return False
         return matches if matches else True
 
-    def _neg_compare_fact(self, query_args, fact_args, matches=None):
-        matches = matches or {}
-        for query, fact in zip(query_args, fact_args):
-            if query.is_variable():
-                assert query.term in matches
-                if matches[query.term] != fact:
-                    return True
-            elif query.term == fact.term and query.arity == fact.arity:
-                if self._neg_compare_fact(query.children, fact.children, matches):
-                    return True
-            else:
-                return True
-        return False
-
     def _derive_facts(self, key, query):
         if key not in self.rules:
             return []
@@ -114,6 +96,12 @@ class Database(object):
         return self._find_facts(self.derived_facts.get(key, []), query)
 
     def _process_rule(self, rule):
+        # negated sentences in the body must be processed first
+        for _, body in self.rules.get(rule, []):
+            for sentence in body:
+                if sentence.is_neg():
+                    self._process_rule((sentence.term, sentence.arity))
+
         rules = deque([rule])
         new_facts = {}
         while rules:
@@ -144,14 +132,18 @@ class Database(object):
                     self.derived_facts.get(name, []) + \
                     more_facts.get(name, [])
 
-            neg = literal.is_neg()
             new_varlist = []
             for var_dict in variable_list:
-                results = self._find_facts(table, literal.children, var_dict, neg)
-                if results is True:
-                    new_varlist.append(var_dict)
-                elif results:
-                    new_varlist.extend(results)
+                results = self._find_facts(table, literal.children, var_dict)
+                if literal.is_neg():
+                    assert var_dict
+                    if not results:
+                        new_varlist.append(var_dict)
+                else:
+                    if results is True:
+                        new_varlist.append(var_dict)
+                    elif results:
+                        new_varlist.extend(results)
             variable_list = new_varlist
 
         return found_rules, filter(lambda x: x is not None, variable_list)

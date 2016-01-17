@@ -43,10 +43,10 @@ class ASTNode(object):
             return ' '.join(repr(x) for x in self.children)
 
         ret = ''
-        if self.arity > 0:
-            ret += '('
         if self.is_neg():
             ret += '~'
+        if self.arity > 0:
+            ret += '('
         ret += self.term
         for child in self.children:
             ret += ' '
