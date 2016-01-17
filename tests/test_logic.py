@@ -19,6 +19,7 @@ class MockToken(object):
 
 class MockNode(object):
     def __init__(self, token, children=None):
+        self.is_negative = False
         self.token = token
         self.children = children if children else []
         self.arity = len(self.children)
@@ -29,6 +30,9 @@ class MockNode(object):
 
     def is_variable(self):
         return self.token.is_variable()
+
+    def is_neg(self):
+        return self.is_negative
 
     def copy(self):
         return MockNode(self.token.copy(), [x.copy() for x in self.children])
@@ -76,6 +80,21 @@ class TestDatabase(unittest.TestCase):
         self.db.define_fact('link', 2, [make_mock_node(x) for x in ('3', '4')])
         self.db.define_fact('link', 2, [make_mock_node(x) for x in ('2', '3')])
         self.db.define_fact('link', 2, [make_mock_node(x) for x in ('1', '2')])
+
+        # NEGATION
+        # > x(1). x(2). x(3). x(4).
+        # > not_path(X, Y) :- x(X), x(Y), not(path(X, Y)).
+        self.db.define_fact('x', 1, [make_mock_node('1')])
+        self.db.define_fact('x', 1, [make_mock_node('2')])
+        self.db.define_fact('x', 1, [make_mock_node('3')])
+        self.db.define_fact('x', 1, [make_mock_node('4')])
+        xx = make_mock_node('x', [make_mock_node('?x')])
+        xy = make_mock_node('x', [make_mock_node('?y')])
+        path = make_mock_node('path', [make_mock_node(x) for x in ('?x', '?y')])
+        self.db.define_rule('path2', 2, [make_mock_node(x) for x in ('?x', '?y')], [xx, xy, path])
+        not_path = make_mock_node('path', [make_mock_node(x) for x in ('?x', '?y')])
+        not_path.is_negative = True
+        self.db.define_rule('not-path', 2, [make_mock_node(x) for x in ('?x', '?y')], [xx, xy, not_path])
 
         # CYCLICAL RECURSION
         # Datalog 2.5
@@ -149,6 +168,14 @@ class TestDatabase(unittest.TestCase):
     def test_rule_failure(self):
         query = make_mock_node('path', [make_mock_node('4'), make_mock_node('?x')])
         self.assertFalse(self.db.query(query))
+
+#    def test_literal_negation(self):
+#        query = make_mock_node('not-path', [make_mock_node('4'), make_mock_node('1')])
+#        self.assertTrue(self.db.query(query))
+
+#    def test_rule_success2(self):
+#        query = make_mock_node('path2', [make_mock_node('1'), make_mock_node('4')])
+#        self.assertTrue(self.db.query(query))
 
     # > p(X)?
     # p(1).

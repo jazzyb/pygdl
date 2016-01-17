@@ -60,18 +60,18 @@ class Database(object):
                 self._collect_requirements(rule, keys)
         return keys
 
-    def _find_facts(self, table, query, variables=None):
+    def _find_facts(self, table, query, variables=None, neg=False):
         results = []
         for args in table:
             variables = None if variables is None else variables.copy()
-            match = self._compare_fact(query, args, variables)
+            match = self._compare_fact(query, args, variables, neg)
             if match is True:
                 return True
             elif match:
                 results.append(match)
         return results
 
-    def _compare_fact(self, query_args, fact_args, matches=None):
+    def _compare_fact(self, query_args, fact_args, matches=None, neg=False):
         matches = matches or {}
         for query, fact in zip(query_args, fact_args):
             if query.is_variable():
@@ -81,7 +81,7 @@ class Database(object):
                 else:
                     matches[query.term] = fact.copy()
             elif query.term == fact.term and query.arity == fact.arity:
-                if self._compare_fact(query.children, fact.children, matches) is False:
+                if self._compare_fact(query.children, fact.children, matches, neg) is False:
                     return False
             else:
                 return False
@@ -104,7 +104,7 @@ class Database(object):
             nfacts = len(new_facts.get(name, []))
             for args, body in self.rules.get(name, []):
                 found_rules, variable_list = self._evaluate_body(body, new_facts)
-                rules.extend(filter(lambda x: x != rule and x not in rules, found_rules))
+                rules.extend(filter(lambda x: x != name and x not in rules, found_rules))
                 for fact in self._set_variables(args, variable_list):
                     if fact not in new_facts.get(name, []):
                         new_facts.setdefault(name, []).append(fact)
@@ -126,9 +126,10 @@ class Database(object):
                     self.derived_facts.get(name, []) + \
                     more_facts.get(name, [])
 
+            neg = literal.is_neg()
             new_varlist = []
             for var_dict in variable_list:
-                results = self._find_facts(table, literal.children, var_dict)
+                results = self._find_facts(table, literal.children, var_dict, neg)
                 if results is True:
                     new_varlist.append(var_dict)
                 elif results:
@@ -140,12 +141,8 @@ class Database(object):
     def _set_variables(self, args, variables):
         ret = []
         for var_dict in variables:
-            new_args = []
-            for arg in args:
-                const_tree = arg.copy()
-                self._vars_to_consts(const_tree, var_dict)
-                new_args.append(const_tree)
-            ret.append(new_args)
+            ret.append([self._vars_to_consts(arg.copy(), var_dict) \
+                    for arg in args])
         return ret
 
     def _vars_to_consts(self, node, var_dict):
@@ -153,6 +150,7 @@ class Database(object):
             node.token.token = var_dict[node.term].term
         for child in node.children:
             self._vars_to_consts(child, var_dict)
+        return node
 
     def _sanity_check_fact_arguments(self, args):
         if type(args) is not list:

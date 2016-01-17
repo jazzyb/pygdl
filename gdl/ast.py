@@ -1,5 +1,6 @@
 class ASTNode(object):
-    def __init__(self, token=None, parent=None):
+    def __init__(self, token=None, parent=None, is_negative=False):
+        self.is_negative = is_negative
         self.parent = parent
         self.token = token
         self.children = []
@@ -20,8 +21,12 @@ class ASTNode(object):
     def is_variable(self):
         return self.token.is_variable()
 
-    def copy(self, parent=None):
-        head = ASTNode(self.token.copy(), parent)
+    def is_neg(self):
+        return self.is_negative
+
+    def copy(self, parent=None, is_negative=None):
+        is_negative = self.is_negative if is_negative is None else is_negative
+        head = ASTNode(self.token.copy(), parent, is_negative)
         head.children = [child.copy(head) for child in self.children]
         return head
 
