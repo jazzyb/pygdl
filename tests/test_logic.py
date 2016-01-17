@@ -90,8 +90,8 @@ class TestDatabase(unittest.TestCase):
         self.db.define_fact('x', 1, [make_mock_node('4')])
         xx = make_mock_node('x', [make_mock_node('?x')])
         xy = make_mock_node('x', [make_mock_node('?y')])
-        path = make_mock_node('path', [make_mock_node(x) for x in ('?x', '?y')])
-        self.db.define_rule('path2', 2, [make_mock_node(x) for x in ('?x', '?y')], [xx, xy, path])
+        path = make_mock_node('path', [make_mock_node(x) for x in ('?y', '?x')])
+        self.db.define_rule('rpath', 2, [make_mock_node(x) for x in ('?x', '?y')], [xx, xy, path])
         not_path = make_mock_node('path', [make_mock_node(x) for x in ('?x', '?y')])
         not_path.is_negative = True
         self.db.define_rule('not-path', 2, [make_mock_node(x) for x in ('?x', '?y')], [xx, xy, not_path])
@@ -165,16 +165,16 @@ class TestDatabase(unittest.TestCase):
         query = make_mock_node('path', [make_mock_node('1'), make_mock_node('4')])
         self.assertTrue(self.db.query(query))
 
+    def test_rule_success2(self):
+        query = make_mock_node('rpath', [make_mock_node('4'), make_mock_node('1')])
+        self.assertTrue(self.db.query(query))
+
     def test_rule_failure(self):
         query = make_mock_node('path', [make_mock_node('4'), make_mock_node('?x')])
         self.assertFalse(self.db.query(query))
 
 #    def test_literal_negation(self):
 #        query = make_mock_node('not-path', [make_mock_node('4'), make_mock_node('1')])
-#        self.assertTrue(self.db.query(query))
-
-#    def test_rule_success2(self):
-#        query = make_mock_node('path2', [make_mock_node('1'), make_mock_node('4')])
 #        self.assertTrue(self.db.query(query))
 
     # > p(X)?

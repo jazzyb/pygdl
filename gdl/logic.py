@@ -63,8 +63,8 @@ class Database(object):
     def _find_facts(self, table, query, variables=None, neg=False):
         results = []
         for args in table:
-            variables = None if variables is None else variables.copy()
-            match = self._compare_fact(query, args, variables, neg)
+            var_copy = None if variables is None else variables.copy()
+            match = self._compare_fact(query, args, var_copy, neg)
             if match is True:
                 return True
             elif match:
