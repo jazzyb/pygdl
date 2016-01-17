@@ -37,3 +37,18 @@ class ASTNode(object):
             if a != b:
                 return False
         return True
+
+    def __repr__(self):
+        if self.token is None:
+            return ' '.join(repr(x) for x in self.children)
+
+        ret = ''
+        if self.arity > 0:
+            ret += '('
+        ret += self.term
+        for child in self.children:
+            ret += ' '
+            ret += repr(child)
+        if self.arity > 0:
+            ret += ')'
+        return ret

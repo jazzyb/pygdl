@@ -43,6 +43,9 @@ class Lexeme(object):
     def copy(self):
         return Lexeme(self.filename, self.line, self.lineno, self.column, self.token)
 
+    def __repr__(self):
+        return repr(self.token)
+
 
 class Lexer(object):
     def __init__(self):
