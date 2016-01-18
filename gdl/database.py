@@ -45,9 +45,21 @@ class Database(object):
     ## HELPERS
 
     def _set_rule_requirements(self, rule, sentences):
-        for s in sentences:
-            if s.predicate != rule:
-                self.requirements.setdefault(s.predicate, set()).add(rule)
+        for sentence in sentences:
+            self._add_to_requirements(rule, sentence)
+
+    def _add_to_requirements(self, pred, rule):
+        if rule.is_not():
+            self._add_to_requirements(pred, rule.children[0])
+        elif rule.is_or():
+            self._add_to_requirements(pred, rule.children[0])
+            self._add_to_requirements(pred, rule.children[1])
+        elif rule.is_distinct():
+            for child in rule.children:
+                if child.is_constant():
+                    self._add_to_requirements(pred, child)
+        elif rule.predicate != pred:
+            self.requirements.setdefault(rule.predicate, set()).add(pred)
 
     def _delete_derived_facts(self, pred):
         for rule in self._collect_requirements(pred, [pred]):
@@ -152,9 +164,15 @@ class Database(object):
         return new_varlist
 
     def _evaluate_not(self, literal, variables, facts, rules):
+        has_variable = False
+        for child in literal.children:
+            if child.is_variable():
+                has_variable = True
+
         new_varlist = []
         for results, var_dict in self._iter_var_results(literal, variables, facts, rules):
-            assert var_dict
+            if has_variable:
+                assert var_dict
             if not results:
                 new_varlist.append(var_dict)
         return new_varlist

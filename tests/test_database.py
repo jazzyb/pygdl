@@ -22,6 +22,9 @@ class MockToken(object):
     def is_not(self):
         return self.value == 'not'
 
+    def is_constant(self):
+        return self.value[0] not in ('?', '(', ')')
+
     def copy(self):
         return MockToken(self.value)
 
@@ -42,6 +45,9 @@ class MockNode(object):
 
     def is_variable(self):
         return self.token.is_variable()
+
+    def is_constant(self):
+        return self.token.is_constant()
 
     def is_distinct(self):
         return self.token.is_distinct()
