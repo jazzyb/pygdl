@@ -13,6 +13,7 @@ class Parser(object):
     def parse(self, tokens):
         new_sentence = False
         negative = False
+        not_count = 0
         curr = self.head
         for token in tokens:
             if new_sentence:
@@ -21,6 +22,7 @@ class Parser(object):
                 if token.is_not():
                     if negative:
                         raise ParseError(GDLError.DOUBLE_NOT, token)
+                    not_count += 1
                     negative = True
                     new_sentence = False
                     continue
@@ -32,7 +34,8 @@ class Parser(object):
             elif token.is_open():
                 new_sentence = True
             elif token.is_close():
-                if curr.is_neg():
+                if curr.is_neg() and not_count:
+                    not_count -= 1
                     continue
                 curr = curr.parent
                 if curr is None:

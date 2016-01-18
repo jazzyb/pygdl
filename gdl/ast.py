@@ -21,6 +21,9 @@ class ASTNode(object):
     def is_variable(self):
         return self.token.is_variable()
 
+    def is_distinct(self):
+        return self.token.is_distinct()
+
     def is_neg(self):
         return self.is_negative
 

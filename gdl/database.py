@@ -124,6 +124,10 @@ class Database(object):
         found_rules = set()
         variable_list = [None]
         for literal in body:
+            if literal.is_distinct():
+                variable_list = self._run_distinct(variable_list, *literal.children)
+                continue
+
             name = (literal.term, literal.arity)
             if name in self.rules and name not in self.derived_facts:
                 found_rules.add(name)
@@ -161,6 +165,15 @@ class Database(object):
         for child in node.children:
             self._vars_to_consts(child, var_dict)
         return node
+
+    def _run_distinct(self, variables, a, b):
+        new_variables = []
+        for var_dict in variables:
+            acopy = self._vars_to_consts(a.copy(), var_dict)
+            bcopy = self._vars_to_consts(b.copy(), var_dict)
+            if acopy != bcopy:
+                new_variables.append(var_dict)
+        return new_variables
 
     def _sanity_check_fact_arguments(self, args):
         if type(args) is not list:

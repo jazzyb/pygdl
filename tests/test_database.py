@@ -13,6 +13,9 @@ class MockToken(object):
     def is_variable(self):
         return self.token[0] == '?'
 
+    def is_distinct(self):
+        return self.token == 'distinct'
+
     def copy(self):
         return MockToken(self.token)
 
@@ -30,6 +33,9 @@ class MockNode(object):
 
     def is_variable(self):
         return self.token.is_variable()
+
+    def is_distinct(self):
+        return self.token.is_distinct()
 
     def is_neg(self):
         return self.is_negative
@@ -111,6 +117,13 @@ class TestDatabase(unittest.TestCase):
         self.db.define_rule('p', 1, [make_mock_node('?x')], [q, s])
         self.db.define_rule('q', 1, [make_mock_node('?x')], [p, t])
         self.db.define_rule('q', 1, [make_mock_node('?x')], [t])
+
+        # DISTINCT
+        # (<= (diff ?x ?y) (x ?x) (x ?y) (distinct ?x ?y))
+        distinct = make_mock_node('distinct', [make_mock_node('?x'), make_mock_node('?y')])
+        xx = make_mock_node('x', [make_mock_node('?x')])
+        xy = make_mock_node('x', [make_mock_node('?y')])
+        self.db.define_rule('diff', 2, [make_mock_node(x) for x in ('?x', '?y')], [xx, xy, distinct])
 
     def test_fact_list_error(self):
         with self.assertRaises(TypeError):
@@ -198,3 +211,10 @@ class TestDatabase(unittest.TestCase):
                 [make_mock_node('s', [make_mock_node('?x')])])
         results = [{k: d[k].term for k in d} for d in self.db.query(query)]
         self.assertEqual(results, answer)
+
+    def test_distinct(self):
+        query = make_mock_node('diff', [make_mock_node('?x'), make_mock_node('?y')])
+        results = [{k: d[k].term for k in d} for d in self.db.query(query)]
+        self.assertEqual(12, len(results))
+        for i in range(1, 5):
+            self.assertNotIn({'?x': i, '?y': i}, results)
