@@ -3,27 +3,27 @@ from gdl import Parser, ParseError
 
 
 class MockToken(object):
-    def __init__(self, filename, line, lineno, col, token):
-        self.token = token
+    def __init__(self, filename, line, lineno, col, value):
+        self.value = value
         self.filename = filename
         self.line = line
         self.lineno = lineno,
         self.column = col
 
     def is_open(self):
-        return self.token == '('
+        return self.value == '('
 
     def is_close(self):
-        return self.token == ')'
+        return self.value == ')'
 
     def is_not(self):
-        return self.token == 'not'
+        return self.value == 'not'
 
     def is_variable(self):
-        return self.token[0] == '?'
+        return self.value[0] == '?'
 
     def is_constant(self):
-        return self.token[0] not in ('?', '(', ')')
+        return self.value[0] not in ('?', '(', ')')
 
 
 class TestParser(unittest.TestCase):
@@ -31,7 +31,7 @@ class TestParser(unittest.TestCase):
         tokens = ['(', '<=', '(', 'ancestor', '?a', '?c', ')', '(', 'parent', '?a', '?b', ')', '(', 'ancestor', '?b', '?c', ')', ')']
         self.tokens = [MockToken(None, None, None, None, t) for t in tokens]
         ast_head = Parser().parse(self.tokens)
-        self.assertEqual('<=', ast_head.children[0].token.token)
+        self.assertEqual('<=', ast_head.children[0].token.value)
         self.assertEqual(1, len(ast_head.children))
         tokens = [c.term for c in ast_head.children[0].children]
         self.assertEqual(['ancestor', 'parent', 'ancestor'], tokens)
@@ -41,14 +41,6 @@ class TestParser(unittest.TestCase):
         self.assertEqual(['?a', '?b'], tokens)
         tokens = [c.term for c in ast_head.children[0].children[2].children]
         self.assertEqual(['?b', '?c'], tokens)
-
-    def test_not(self):
-        tokens = ['(', '<=', '(', 'not-path', '?x', '?y', ')', '(', 'not',
-                '(', 'path', '?x', '?y', ')', ')', ')']
-        self.tokens = [MockToken(None, None, None, None, t) for t in tokens]
-        ast = Parser().parse(self.tokens)
-        self.assertEqual('path', ast.children[0].children[1].term)
-        self.assertTrue(ast.children[0].children[1].is_neg())
 
     def test_double_negative(self):
         errmsg = '''Double negatives aren't not disallowed.
