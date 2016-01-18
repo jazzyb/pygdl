@@ -40,6 +40,9 @@ class Lexeme(object):
     def is_distinct(self):
         return self.token == 'distinct'
 
+    def is_or(self):
+        return self.token == 'or'
+
     def is_variable(self):
         return self.token[0] == '?'
 

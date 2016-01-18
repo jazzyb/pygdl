@@ -16,6 +16,9 @@ class MockToken(object):
     def is_distinct(self):
         return self.token == 'distinct'
 
+    def is_or(self):
+        return self.token == 'or'
+
     def copy(self):
         return MockToken(self.token)
 
@@ -36,6 +39,9 @@ class MockNode(object):
 
     def is_distinct(self):
         return self.token.is_distinct()
+
+    def is_or(self):
+        return self.token.is_or()
 
     def is_neg(self):
         return self.is_negative
@@ -124,6 +130,14 @@ class TestDatabase(unittest.TestCase):
         xx = make_mock_node('x', [make_mock_node('?x')])
         xy = make_mock_node('x', [make_mock_node('?y')])
         self.db.define_rule('diff', 2, [make_mock_node(x) for x in ('?x', '?y')], [xx, xy, distinct])
+
+        # OR
+        # (<= (valid? ?x ?y) (not-path ?x ?y) (or (distinct ?y 4) (distinct ?x 4)))
+        d1 = make_mock_node('distinct', [make_mock_node('?y'), make_mock_node('4')])
+        d2 = make_mock_node('distinct', [make_mock_node('?x'), make_mock_node('4')])
+        or_ = make_mock_node('or', [d1, d2])
+        not_path = make_mock_node('not-path', [make_mock_node(x) for x in ('?x', '?y')])
+        self.db.define_rule('valid?', 2, [make_mock_node(x) for x in ('?x', '?y')], [not_path, or_])
 
     def test_fact_list_error(self):
         with self.assertRaises(TypeError):
@@ -218,3 +232,7 @@ class TestDatabase(unittest.TestCase):
         self.assertEqual(12, len(results))
         for i in range(1, 5):
             self.assertNotIn({'?x': i, '?y': i}, results)
+
+#    def test_or(self):
+#        query = make_mock_node('valid?', [make_mock_node('?x'), make_mock_node('?y')])
+#        results = [{k: d[k].term for k in d} for d in self.db.query(query)]

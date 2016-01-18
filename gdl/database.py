@@ -124,33 +124,50 @@ class Database(object):
         found_rules = set()
         variable_list = [None]
         for literal in body:
-            if literal.is_distinct():
-                variable_list = self._run_distinct(variable_list, *literal.children)
-                continue
-
-            name = (literal.term, literal.arity)
-            if name in self.rules and name not in self.derived_facts:
-                found_rules.add(name)
-
-            table = self.facts.get(name, []) + \
-                    self.derived_facts.get(name, []) + \
-                    more_facts.get(name, [])
-
-            new_varlist = []
-            for var_dict in variable_list:
-                results = self._find_facts(table, literal.children, var_dict)
-                if literal.is_neg():
-                    assert var_dict
-                    if not results:
-                        new_varlist.append(var_dict)
-                else:
-                    if results is True:
-                        new_varlist.append(var_dict)
-                    elif results:
-                        new_varlist.extend(results)
-            variable_list = new_varlist
-
+            if literal.is_or():
+                variable_list = self._run_or(variable_list, literal,
+                        more_facts, found_rules)
+            else:
+                variable_list = self._update_variable_list(variable_list,
+                        literal, more_facts, found_rules)
         return found_rules, filter(lambda x: x is not None, variable_list)
+
+    def _update_variable_list(self, variable_list, literal, more_facts, found_rules):
+        if literal.is_distinct():
+            return self._run_distinct(variable_list, *literal.children)
+
+        name = (literal.term, literal.arity)
+        if name in self.rules and name not in self.derived_facts:
+            found_rules.add(name)
+
+        table = self.facts.get(name, []) + \
+                self.derived_facts.get(name, []) + \
+                more_facts.get(name, [])
+
+        new_varlist = []
+        for var_dict in variable_list:
+            results = self._find_facts(table, literal.children, var_dict)
+            if literal.is_neg():
+                assert var_dict
+                if not results:
+                    new_varlist.append(var_dict)
+            else:
+                if results is True:
+                    new_varlist.append(var_dict)
+                elif results:
+                    new_varlist.extend(results)
+        return new_varlist
+
+    def _run_or(self, variable_list, literal, more_facts, found_rules):
+        vars0 = self._update_variable_list(variable_list, literal.children[0],
+                more_facts, found_rules)
+        vars1 = self._update_variable_list(variable_list, literal.children[1],
+                more_facts, found_rules)
+        ret = vars0[:]
+        for var_dict in vars1:
+            if var_dict not in vars0:
+                ret.append(var_dict)
+        return ret
 
     def _set_variables(self, args, variables):
         ret = []

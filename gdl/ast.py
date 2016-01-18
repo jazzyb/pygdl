@@ -24,6 +24,9 @@ class ASTNode(object):
     def is_distinct(self):
         return self.token.is_distinct()
 
+    def is_or(self):
+        return self.token.is_or()
+
     def is_neg(self):
         return self.is_negative
 
