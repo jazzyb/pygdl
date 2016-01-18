@@ -87,3 +87,33 @@ class TestParser(unittest.TestCase):
         with self.assertRaises(ParseError) as cm:
             Parser().parse(bad_tokens)
         self.assertEqual(str(cm.exception), errmsg)
+
+    def test_missing_closed_parse_error(self):
+        errmsg = '''Missing closed parenthesis.
+22: (f a ?x
+         ^'''
+        line = '(f a ?x'
+        tokens = [('(', 1),
+                  ('f', 2),
+                  ('a', 4),
+                  ('?x', 6)]
+        bad_tokens = [MockToken('test.gdl', line, 22, y, x) for x, y in tokens]
+        with self.assertRaises(ParseError) as cm:
+            Parser().parse(bad_tokens)
+        self.assertEqual(str(cm.exception), errmsg)
+
+    def test_bad_relation_error(self):
+        errmsg = '''The built-in predicate 'or/3' has the wrong arity.
+1: (or x y z)
+    ^'''
+        line = '(or x y z)'
+        tokens = [('(', 1),
+                  ('or', 2),
+                  ('x', 5),
+                  ('y', 7),
+                  ('z', 9),
+                  (')', 10)]
+        tokens = [MockToken('test.gdl', line, 1, y, x) for x, y in tokens]
+        with self.assertRaises(ParseError) as cm:
+            Parser().parse(tokens)
+        self.assertEqual(str(cm.exception), errmsg)

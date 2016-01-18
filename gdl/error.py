@@ -4,7 +4,8 @@ import os
 class GDLError(Exception):
     EXPECTED_CONSTANT = 'A constant was expected.'
     UNEXPECTED_CLOSE = 'Unexpected closed parenthesis.'
-    BAD_RELATION = "The builtin relation '%s/%d' has the wrong arity."
+    MISSING_CLOSE = 'Missing closed parenthesis.'
+    BAD_PREDICATE = "The built-in predicate '%s/%d' has the wrong arity."
     FACT_VARIABLE = 'Variables are not allowed in facts.'
     NO_PREDICATE = "No such predicate '%s/%d'."
     DOUBLE_NOT = "Double negatives aren't not disallowed."

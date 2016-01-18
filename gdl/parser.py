@@ -7,6 +7,12 @@ class ParseError(GDLError):
 
 
 class Parser(object):
+    RESERVED = {
+        'distinct': 2,
+        'not': 1,
+        'or':  2,
+    }
+
     def __init__(self):
         self.head = ASTNode()
 
@@ -27,9 +33,17 @@ class Parser(object):
                 new_sentence = True
             elif token.is_close():
                 try:
-                    curr = parents.pop()
+                    popped = parents.pop()
                 except IndexError:
                     raise ParseError(GDLError.UNEXPECTED_CLOSE, token)
+                self._validate_node(curr)
+                curr = popped
             else:
                 curr.create_child(token)
+        if parents:
+            raise ParseError(GDLError.MISSING_CLOSE, tokens[-1])
         return self.head.children
+
+    def _validate_node(self, node):
+        if self.RESERVED.get(node.term, node.arity) != node.arity:
+            raise ParseError(GDLError.BAD_PREDICATE % node.predicate, node.token)
