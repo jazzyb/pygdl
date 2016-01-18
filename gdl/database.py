@@ -16,7 +16,9 @@ class Database(object):
 
     def define_fact(self, term, arity, args):
         self._sanity_check_fact_arguments(args)
-        self.facts.setdefault((term, arity), []).append(args)
+        pred = (term, arity)
+        self.facts.setdefault(pred, []).append(args)
+        self._delete_derived_facts(pred)
 
     def define_rule(self, term, arity, args, body):
         self._sanity_check_new_rule(term, arity, args, body)
