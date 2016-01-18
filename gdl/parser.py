@@ -9,8 +9,16 @@ class ParseError(GDLError):
 class Parser(object):
     RESERVED = {
         'distinct': 2,
-        'not': 1,
-        'or':  2,
+        'does':     2,
+        'goal':     2,
+        'init':     1,
+        'legal':    2,
+        'next':     1,
+        'not':      1,
+        'or':       2,
+        'role':     1,
+        'terminal': 0,
+        'true':     1,
     }
 
     def __init__(self):
