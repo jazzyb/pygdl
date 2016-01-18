@@ -14,7 +14,7 @@ for filename in sys.argv[1:]:
     # read in any files from the command line
     with open(filename, 'r') as file:
         tokens = Lexer().lex(file=file)
-    for lit in Parser().parse(tokens).children:
+    for lit in Parser().parse(tokens):
 #        print(lit)
         if lit.term == '<=':
             head, body = lit.children[0], lit.children[1:]
@@ -40,18 +40,18 @@ try:
         tokens = Lexer().lex(raw_string)
 #        print(tokens)
         try:
-            tree = Parser().parse(tokens)
+            trees = Parser().parse(tokens)
         except ParseError as err:
             print('error: ', err)
             continue
-#        print(tree)
+#        print(trees)
 #        print('-' * 20)
 
         if prompt == QUERY:
-            assert tree.arity == 1
+            assert len(trees) == 1
 
             try:
-                results = database.query(tree.children[0])
+                results = database.query(trees[0])
 #                print('-' * 20)
 #                print(results)
 #                print('-' * 20)
@@ -71,8 +71,8 @@ try:
                 print(results)
 
         else:
-            print(tree)
-            for lit in tree.children:
+            for lit in trees:
+                print(lit)
                 try:
                     if lit.term == '<=':
                         head, body = lit.children[0], lit.children[1:]

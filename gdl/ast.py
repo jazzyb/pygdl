@@ -46,9 +46,6 @@ class ASTNode(object):
         return True
 
     def __repr__(self):
-        if self.token is None:
-            return ' '.join(repr(x) for x in self.children)
-
         ret = ''
         if self.arity > 0:
             ret += '('

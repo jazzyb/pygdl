@@ -30,16 +30,16 @@ class TestParser(unittest.TestCase):
     def test_parse_tokens(self):
         tokens = ['(', '<=', '(', 'ancestor', '?a', '?c', ')', '(', 'parent', '?a', '?b', ')', '(', 'ancestor', '?b', '?c', ')', ')']
         self.tokens = [MockToken(None, None, None, None, t) for t in tokens]
-        ast_head = Parser().parse(self.tokens)
-        self.assertEqual('<=', ast_head.children[0].token.value)
-        self.assertEqual(1, len(ast_head.children))
-        tokens = [c.term for c in ast_head.children[0].children]
+        trees = Parser().parse(self.tokens)
+        self.assertEqual('<=', trees[0].token.value)
+        self.assertEqual(1, len(trees))
+        tokens = [c.term for c in trees[0].children]
         self.assertEqual(['ancestor', 'parent', 'ancestor'], tokens)
-        tokens = [c.term for c in ast_head.children[0].children[0].children]
+        tokens = [c.term for c in trees[0].children[0].children]
         self.assertEqual(['?a', '?c'], tokens)
-        tokens = [c.term for c in ast_head.children[0].children[1].children]
+        tokens = [c.term for c in trees[0].children[1].children]
         self.assertEqual(['?a', '?b'], tokens)
-        tokens = [c.term for c in ast_head.children[0].children[2].children]
+        tokens = [c.term for c in trees[0].children[2].children]
         self.assertEqual(['?b', '?c'], tokens)
 
     def test_double_negative(self):

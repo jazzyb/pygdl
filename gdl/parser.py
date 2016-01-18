@@ -9,7 +9,6 @@ class ParseError(GDLError):
 class Parser(object):
     def __init__(self):
         self.head = ASTNode()
-        self.warnings = []
 
     def parse(self, tokens):
         new_sentence = False
@@ -33,4 +32,4 @@ class Parser(object):
                     raise ParseError(GDLError.UNEXPECTED_CLOSE, token)
             else:
                 curr.create_child(token)
-        return self.head
+        return self.head.children
