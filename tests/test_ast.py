@@ -3,15 +3,15 @@ from gdl.ast import ASTNode
 
 
 class MockToken(object):
-    def __init__(self, filename, line, lineno, col, token):
-        self.token = token
+    def __init__(self, filename, line, lineno, col, value):
+        self.value = value
         self.filename = filename
         self.line = line
         self.lineno = lineno,
         self.column = col
 
     def copy(self):
-        return MockToken(self.filename, self.line, self.lineno, self.column, self.token)
+        return MockToken(self.filename, self.line, self.lineno, self.column, self.value)
 
 
 class TestASTNode(unittest.TestCase):
@@ -44,5 +44,5 @@ class TestASTNode(unittest.TestCase):
     def test_inequality(self):
         a = self._new_tree()
         b = self._new_tree()
-        b.children[0].children[0].token.token = 'player'
+        b.children[0].children[0].token.value = 'player'
         self.assertNotEqual(a, b)

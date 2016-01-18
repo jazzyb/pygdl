@@ -1,6 +1,5 @@
 class ASTNode(object):
-    def __init__(self, token=None, parent=None, is_negative=False):
-        self.is_negative = is_negative
+    def __init__(self, token=None, parent=None):
         self.parent = parent
         self.token = token
         self.children = []
@@ -12,14 +11,21 @@ class ASTNode(object):
 
     @property
     def term(self):
-        return self.token.token
+        return self.token.value
 
     @property
     def arity(self):
         return len(self.children)
 
+    @property
+    def predicate(self):
+        return (self.term, self.arity)
+
     def is_variable(self):
         return self.token.is_variable()
+
+    def is_not(self):
+        return self.token.is_not()
 
     def is_distinct(self):
         return self.token.is_distinct()
@@ -27,17 +33,13 @@ class ASTNode(object):
     def is_or(self):
         return self.token.is_or()
 
-    def is_neg(self):
-        return self.is_negative
-
     def copy(self, parent=None, is_negative=None):
-        is_negative = self.is_negative if is_negative is None else is_negative
-        head = ASTNode(self.token.copy(), parent, is_negative)
+        head = ASTNode(self.token.copy(), parent)
         head.children = [child.copy(head) for child in self.children]
         return head
 
     def __eq__(self, other):
-        if (self.term, self.arity) != (other.term, other.arity):
+        if self.predicate != other.predicate:
             return False
         for a, b in zip(self.children, other.children):
             if a != b:
@@ -49,8 +51,6 @@ class ASTNode(object):
             return ' '.join(repr(x) for x in self.children)
 
         ret = ''
-        if self.is_neg():
-            ret += '~'
         if self.arity > 0:
             ret += '('
         ret += self.term
