@@ -17,10 +17,10 @@ class MockToken(object):
 class TestASTNode(unittest.TestCase):
     def _new_tree(self):
         pred = ASTNode(MockToken(None, None, None, None, '<='))
-        legal = ASTNode(MockToken(None, None, None, None, 'legal'), pred)
+        legal = ASTNode(MockToken(None, None, None, None, 'legal'))
         legal.create_child(MockToken(None, None, None, None, '?player'))
         legal.create_child(MockToken(None, None, None, None, '?move'))
-        true = ASTNode(MockToken(None, None, None, None, 'true'), pred)
+        true = ASTNode(MockToken(None, None, None, None, 'true'))
         pred.children = [legal, true]
         return pred
 
@@ -29,10 +29,8 @@ class TestASTNode(unittest.TestCase):
         legal = pred.children[0]
         copy = legal.copy()
         self.assertEqual(copy.term, 'legal')
-        self.assertEqual(copy.parent, None)
         legal.children = []
         self.assertEqual([child.term for child in copy.children], ['?player', '?move'])
-        self.assertEqual([child.parent for child in copy.children], [copy] * 2)
         legal.token.token = 'foo'
         self.assertEqual(copy.term, 'legal')
 

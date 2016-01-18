@@ -1,11 +1,10 @@
 class ASTNode(object):
-    def __init__(self, token=None, parent=None):
-        self.parent = parent
+    def __init__(self, token=None):
         self.token = token
         self.children = []
 
     def create_child(self, token):
-        child = ASTNode(token, self)
+        child = ASTNode(token)
         self.children.append(child)
         return child
 
@@ -33,9 +32,9 @@ class ASTNode(object):
     def is_or(self):
         return self.token.is_or()
 
-    def copy(self, parent=None, is_negative=None):
-        head = ASTNode(self.token.copy(), parent)
-        head.children = [child.copy(head) for child in self.children]
+    def copy(self):
+        head = ASTNode(self.token.copy())
+        head.children = [child.copy() for child in self.children]
         return head
 
     def __eq__(self, other):
