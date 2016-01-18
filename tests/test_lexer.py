@@ -11,7 +11,7 @@ class TestLexer(unittest.TestCase):
     def test_lex_tokens(self):
         answer = ['(', '<=', '(', 'ancestor', '?a', '?c', ')', '(', 'parent', '?a', '?b', ')', '(', 'ancestor', '?b', '?c', ')', ')']
         string = '(<= (ancestor ?a ?c) (parent ?a ?b) (ancestor ?b ?c))'
-        tokens = list(t.token for t in Lexer().lex(string))
+        tokens = list(t.value for t in Lexer().lex(string))
         self.assertEqual(tokens, answer)
 
     def test_lex_superflouos_whitespace(self):
@@ -22,7 +22,7 @@ class TestLexer(unittest.TestCase):
         ) (
                 ancestor ?b                ?c  )   )     
         '''
-        tokens = list(t.token for t in Lexer().lex(string))
+        tokens = list(t.value for t in Lexer().lex(string))
         self.assertEqual(tokens, answer)
 
     def test_lex_columns(self):
@@ -74,7 +74,7 @@ class TestLexer(unittest.TestCase):
                              (parent ?a ?b)
                              (ancestor ?b ?c))
                  ''')
-        tokens = list((t.token, t.lineno, t.column) for t in Lexer().lex(file=fp))
+        tokens = list((t.value, t.lineno, t.column) for t in Lexer().lex(file=fp))
         self.assertEqual(tokens, answer)
 
     def test_lex_no_input_error(self):
@@ -84,7 +84,7 @@ class TestLexer(unittest.TestCase):
     def test_lex_case_insensitive(self):
         answer = ['(', '<=', '(', 'ancestor', '?a', '?c', ')', '(', 'parent', '?a', '?b', ')', '(', 'ancestor', '?b', '?c', ')', ')']
         string = '(<= (ANCESTOR ?A ?C) (PARENT ?A ?B) (ANCESTOR ?B ?C))'
-        tokens = list(t.token for t in Lexer().lex(string))
+        tokens = list(t.value for t in Lexer().lex(string))
         self.assertEqual(tokens, answer)
 
     def test_lex_comments(self):
@@ -93,5 +93,5 @@ class TestLexer(unittest.TestCase):
                         ;;; doc string goes here ;;;
                         (parent ?a ?b)
                         (ancestor ?b ?c)) ;NOTE: this is recursive'''
-        tokens = list(t.token for t in Lexer().lex(string))
+        tokens = list(t.value for t in Lexer().lex(string))
         self.assertEqual(tokens, answer)
