@@ -3,36 +3,42 @@ from gdl import Database, DatalogError
 
 
 class MockToken(object):
-    def __init__(self, token):
-        self.token = token
+    def __init__(self, value):
+        self.value = value
         self.filename = 'test.gdl'
         self.line = 'foobar'
         self.lineno = 22
         self.column = 3
 
     def is_variable(self):
-        return self.token[0] == '?'
+        return self.value[0] == '?'
 
     def is_distinct(self):
-        return self.token == 'distinct'
+        return self.value == 'distinct'
 
     def is_or(self):
-        return self.token == 'or'
+        return self.value == 'or'
+
+    def is_not(self):
+        return self.value == 'not'
 
     def copy(self):
-        return MockToken(self.token)
+        return MockToken(self.value)
 
 
 class MockNode(object):
     def __init__(self, token, children=None):
-        self.is_negative = False
         self.token = token
         self.children = children if children else []
         self.arity = len(self.children)
 
     @property
     def term(self):
-        return self.token.token
+        return self.token.value
+
+    @property
+    def predicate(self):
+        return (self.term, self.arity)
 
     def is_variable(self):
         return self.token.is_variable()
@@ -43,8 +49,8 @@ class MockNode(object):
     def is_or(self):
         return self.token.is_or()
 
-    def is_neg(self):
-        return self.is_negative
+    def is_not(self):
+        return self.token.is_not()
 
     def copy(self):
         return MockNode(self.token.copy(), [x.copy() for x in self.children])
@@ -104,8 +110,7 @@ class TestDatabase(unittest.TestCase):
         xy = make_mock_node('x', [make_mock_node('?y')])
         path = make_mock_node('path', [make_mock_node(x) for x in ('?y', '?x')])
         self.db.define_rule('rpath', 2, [make_mock_node(x) for x in ('?x', '?y')], [xx, xy, path])
-        not_path = make_mock_node('path', [make_mock_node(x) for x in ('?x', '?y')])
-        not_path.is_negative = True
+        not_path = make_mock_node('not', [make_mock_node('path', [make_mock_node(x) for x in ('?x', '?y')])])
         self.db.define_rule('not-path', 2, [make_mock_node(x) for x in ('?x', '?y')], [xx, xy, not_path])
 
         # CYCLICAL RECURSION
@@ -233,6 +238,7 @@ class TestDatabase(unittest.TestCase):
         for i in range(1, 5):
             self.assertNotIn({'?x': i, '?y': i}, results)
 
-#    def test_or(self):
-#        query = make_mock_node('valid?', [make_mock_node('?x'), make_mock_node('?y')])
-#        results = [{k: d[k].term for k in d} for d in self.db.query(query)]
+    def test_or(self):
+        query = make_mock_node('valid?', [make_mock_node('?x'), make_mock_node('?y')])
+        results = [{k: d[k].term for k in d} for d in self.db.query(query)]
+        self.assertNotIn({'?x': 4, '?y': 4}, results)
