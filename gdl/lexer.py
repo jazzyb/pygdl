@@ -28,6 +28,9 @@ class Lexeme(object):
     def is_empty(self):
         return self.column == -1 or self.value == ''
 
+    def is_rule(self):
+        return self.value == '<='
+
     def is_open(self):
         return self.value == '('
 

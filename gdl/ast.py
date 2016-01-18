@@ -23,6 +23,9 @@ class ASTNode(object):
     def is_variable(self):
         return self.token.is_variable()
 
+    def is_rule(self):
+        return self.token.is_rule()
+
     def is_not(self):
         return self.token.is_not()
 

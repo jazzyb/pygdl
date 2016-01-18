@@ -74,7 +74,7 @@ try:
             for lit in trees:
                 print(lit)
                 try:
-                    if lit.term == '<=':
+                    if lit.is_rule():
                         head, body = lit.children[0], lit.children[1:]
                         database.define_rule(head.term, head.arity, head.children, body)
                     else:
