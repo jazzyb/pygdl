@@ -22,7 +22,7 @@ class Database(object):
         self._delete_derived_facts(pred)
 
     def define_rule(self, term, arity, args, body):
-        self._sanity_check_new_rule(term, arity, args, body)
+        self._sanity_check_new_rule(args, body)
         pred = (term, arity)
         self.rules.setdefault(pred, []).append((args, body))
         self._set_rule_requirements(pred, body)
@@ -44,6 +44,8 @@ class Database(object):
         return results if results else False
 
     ## HELPERS
+
+    ### DETERMINE RULE DEPENDENCIES:
 
     def _set_rule_requirements(self, rule, sentences):
         for sentence in sentences:
@@ -73,6 +75,8 @@ class Database(object):
                 self._collect_requirements(rule, predicates)
         return predicates
 
+    ### PROCESS AND ANSWER FACT QUERIES:
+
     def _find_facts(self, table, query, variables=None):
         results = []
         for args in table:
@@ -98,6 +102,8 @@ class Database(object):
             else:
                 return False
         return matches if matches else True
+
+    ### PROCESS AND ANSWER RULE QUERIES:
 
     def _derive_facts(self, pred, query):
         if pred not in self.rules:
@@ -218,6 +224,8 @@ class Database(object):
             self._vars_to_consts(child, var_dict)
         return node
 
+    ### FACT VALIDATION:
+
     def _sanity_check_fact_arguments(self, args):
         if type(args) is not list:
             raise TypeError('fact arguments should be a list')
@@ -227,5 +235,42 @@ class Database(object):
             if arg.is_variable():
                 raise DatalogError(GDLError.FACT_VARIABLE, arg.token)
 
-    def _sanity_check_new_rule(self, term, arity, args, body):
-        pass # TODO
+    ### RULE VALIDATION:
+
+    def _sanity_check_new_rule(self, args, body):
+        self._validate_variables(args, body)
+
+    def _validate_variables(self, args, body):
+        pos_vars = []
+        for sentence in body:
+            pos_vars.extend(self._collect_positive_variables(sentence))
+
+        neg_vars = []
+        for arg in args:
+            neg_vars.extend(self._collect_negative_variables(arg))
+        for sentence in body:
+            neg_vars.extend(self._collect_negative_variables(sentence))
+
+        for token in neg_vars:
+            if token.value not in pos_vars:
+                raise DatalogError(GDLError.NEGATIVE_VARIABLE % token.value, token)
+
+    def _collect_positive_variables(self, node):
+        if node.is_variable():
+            return [node.term]
+        if node.is_not() or node.is_distinct():
+            return []
+        pos_vars = []
+        for child in node.children:
+            pos_vars.extend(self._collect_positive_variables(child))
+        return pos_vars
+
+    def _collect_negative_variables(self, node):
+        if node.is_variable():
+            return [node.token]
+        if not node.is_not() and not node.is_distinct():
+            return []
+        neg_vars = []
+        for child in node.children:
+            neg_vars.extend(self._collect_negative_variables(child))
+        return neg_vars

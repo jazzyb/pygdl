@@ -9,6 +9,7 @@ class GDLError(Exception):
     FACT_VARIABLE = 'Variables are not allowed in facts.'
     NO_PREDICATE = "No such predicate '%s/%d'."
     DOUBLE_NOT = "Double negatives aren't not disallowed."
+    NEGATIVE_VARIABLE = "'%s' must appear in a positive literal in the body."
 
     def __init__(self, message, token):
         errmsg = message + os.linesep + self._errmsg(token)

@@ -72,7 +72,6 @@ try:
 
         else:
             for lit in trees:
-                print(lit)
                 try:
                     if lit.is_rule():
                         head, body = lit.children[0], lit.children[1:]
@@ -82,6 +81,7 @@ try:
                 except DatalogError as err:
                     print('error: ', err)
                     break
+                print(lit)
 
 except EOFError:
     print('')

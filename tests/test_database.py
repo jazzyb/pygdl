@@ -248,3 +248,10 @@ class TestDatabase(unittest.TestCase):
         query = make_mock_node('valid?', [make_mock_node('?x'), make_mock_node('?y')])
         results = [{k: d[k].term for k in d} for d in self.db.query(query)]
         self.assertNotIn({'?x': 4, '?y': 4}, results)
+
+    def test_variable_in_negative_rule_error(self):
+        distinct = make_mock_node('distinct', [make_mock_node('?x'), make_mock_node('?y')])
+        path = make_mock_node('path', [make_mock_node('?z'), make_mock_node('?y')])
+        body = [path, distinct]
+        with self.assertRaises(DatalogError):
+            self.db.define_rule('diff', 2, [make_mock_node('?x'), make_mock_node('?y')], body)
