@@ -42,7 +42,7 @@ try:
         try:
             trees = Parser().parse(tokens)
         except ParseError as err:
-            print('error: ', err)
+            print('\nerror: ', err)
             continue
 #        print(trees)
 #        print('-' * 20)
@@ -56,7 +56,7 @@ try:
 #                print(results)
 #                print('-' * 20)
             except DatalogError as err:
-                print('error: ', err)
+                print('\nerror: ', err)
                 continue
 
             if type(results) == list:
@@ -79,7 +79,7 @@ try:
                     else:
                         database.define_fact(lit.term, lit.arity, lit.children)
                 except DatalogError as err:
-                    print('error: ', err)
+                    print('\nerror: ', err)
                     break
                 print(lit)
 
