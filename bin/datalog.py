@@ -14,13 +14,9 @@ for filename in sys.argv[1:]:
     # read in any files from the command line
     with open(filename, 'r') as file:
         tokens = Lexer().lex(file=file)
-    for lit in Parser().parse(tokens):
-#        print(lit)
-        if lit.term == '<=':
-            head, body = lit.children[0], lit.children[1:]
-            database.define_rule(head.term, head.arity, head.children, body)
-        else:
-            database.define_fact(lit.term, lit.arity, lit.children)
+    for tree in Parser().parse(tokens):
+#        print(tree)
+        database.define(tree)
 
 try:
     # interactive loop
@@ -71,13 +67,9 @@ try:
                 print(results)
 
         else:
-            for lit in trees:
+            for tree in trees:
                 try:
-                    if lit.is_rule():
-                        head, body = lit.children[0], lit.children[1:]
-                        database.define_rule(head.term, head.arity, head.children, body)
-                    else:
-                        database.define_fact(lit.term, lit.arity, lit.children)
+                    database.define(tree)
                 except DatalogError as err:
                     print('\nerror: ', err)
                     break

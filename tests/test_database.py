@@ -16,6 +16,9 @@ class MockToken(object):
     def is_distinct(self):
         return self.value == 'distinct'
 
+    def is_rule(self):
+        return self.value == '<='
+
     def is_or(self):
         return self.value == 'or'
 
@@ -42,6 +45,9 @@ class MockNode(object):
     @property
     def predicate(self):
         return (self.term, self.arity)
+
+    def is_rule(self):
+        return self.token.is_rule()
 
     def is_variable(self):
         return self.token.is_variable()
@@ -284,3 +290,20 @@ class TestDatabase(unittest.TestCase):
         q = make_mock_node('q_', [make_mock_node('?x')])
         with self.assertRaises(DatalogError):
             self.db.define_rule('p_', 1, [make_mock_node('not', [make_mock_node('?x')])], [q])
+
+    def test_define_fact(self):
+        fact = make_mock_node('new_fact', [make_mock_node(x) for x in ('1', '2', '3')])
+        self.db.define(fact)
+        results = self.db.query(make_mock_node('new_fact', [make_mock_node(x) for x in ('?x', '?y', '?z')]))
+        results = [{k: d[k].term for k in d} for d in results]
+        self.assertEqual(results, [{'?x': '1', '?y': '2', '?z': '3'}])
+
+    def test_define_rule(self):
+        distinct = make_mock_node('distinct', [make_mock_node('?x'), make_mock_node('1')])
+        x = make_mock_node('x', [make_mock_node('?x')])
+        head = make_mock_node('new_rule', [make_mock_node('?x')])
+        rule = make_mock_node('<=', [head, x, distinct])
+        self.db.define(rule)
+        results = self.db.query(make_mock_node('new_rule', [make_mock_node('?x')]))
+        results = [{k: d[k].term for k in d} for d in results]
+        self.assertEqual(results, [{'?x': '2'}, {'?x': '3'}, {'?x': '4'}])

@@ -15,6 +15,13 @@ class Database(object):
 
     ## PUBLIC API
 
+    def define(self, tree):
+        if tree.is_rule():
+            head, body = tree.children[0], tree.children[1:]
+            self.define_rule(head.term, head.arity, head.children, body)
+        else:
+            self.define_fact(tree.term, tree.arity, tree.children)
+
     def define_fact(self, term, arity, args):
         self._sanity_check_fact_arguments(args)
         pred = (term, arity)
