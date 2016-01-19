@@ -73,7 +73,7 @@ try:
                 except DatalogError as err:
                     print('\nerror: ', err)
                     break
-                print(lit)
+                print(tree)
 
 except EOFError:
     print('')

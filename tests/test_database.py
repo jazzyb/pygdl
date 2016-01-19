@@ -162,6 +162,11 @@ class TestDatabase(unittest.TestCase):
         not_path = make_mock_node('not-path', [make_mock_node(x) for x in ('?x', '?y')])
         self.db.define_rule('valid?', 2, [make_mock_node(x) for x in ('?x', '?y')], [not_path, or_])
 
+        # 0-ARITY RULES
+        cell = make_mock_node('cell', [make_mock_node(x) for x in ['?m', '?n', 'b']])
+        self.db.define_rule('open', 0, [], [make_mock_node('true', [cell])])
+        self.db.define_rule('terminal', 0, [], [make_mock_node('not', [make_mock_node('open')])])
+
     def test_fact_list_error(self):
         with self.assertRaises(TypeError):
             Database().define_fact('foo', 2, (1, 2))
@@ -307,3 +312,7 @@ class TestDatabase(unittest.TestCase):
         results = self.db.query(make_mock_node('new_rule', [make_mock_node('?x')]))
         results = [{k: d[k].term for k in d} for d in results]
         self.assertEqual(results, [{'?x': '2'}, {'?x': '3'}, {'?x': '4'}])
+
+    def test_0_arity_rules(self):
+        self.assertFalse(self.db.query(make_mock_node('open')))
+        self.assertTrue(self.db.query(make_mock_node('terminal')))
