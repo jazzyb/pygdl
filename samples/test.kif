@@ -33,3 +33,6 @@
 (<= (p ?x) (q ?x) (s ?x))
 (<= (q ?x) (p ?x) (t ?x))
 (<= (q ?x) (t ?x))
+
+;;; NEGATIVE IN FRONT
+(<= (not-y ?x) (not (s ?x)) (x ?x))

@@ -316,3 +316,13 @@ class TestDatabase(unittest.TestCase):
     def test_0_arity_rules(self):
         self.assertFalse(self.db.query(make_mock_node('open')))
         self.assertTrue(self.db.query(make_mock_node('terminal')))
+
+    def test_evaluate_negative_literals_last(self):
+        xx = make_mock_node('x', [make_mock_node('?x')])
+        not_s = make_mock_node('not', [make_mock_node('s', [make_mock_node('?x')])])
+        head = make_mock_node('not-y', [make_mock_node('?x')])
+        rule = make_mock_node('<=', [head, not_s, xx])
+        self.db.define(rule)
+        results = self.db.query(make_mock_node('not-y', [make_mock_node('?x')]))
+        results = [{k: d[k].term for k in d} for d in results]
+        self.assertEqual(results, [{'?x': '3'}, {'?x': '4'}])

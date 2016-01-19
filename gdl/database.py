@@ -30,6 +30,7 @@ class Database(object):
 
     def define_rule(self, term, arity, args, body):
         self._sanity_check_new_rule(term, arity, args, body)
+        body = self._move_negative_sentences_to_end(body)
         pred = (term, arity)
         self.rules.setdefault(pred, []).append((args, body))
         self._set_rule_requirements(pred, body)
@@ -51,6 +52,23 @@ class Database(object):
         return results if results else False
 
     ## HELPERS
+
+    def _move_negative_sentences_to_end(self, body):
+        pos, neg = [], []
+        for sentence in body:
+            if self._contains_negative(sentence):
+                neg.append(sentence)
+            else:
+                pos.append(sentence)
+        return pos + neg
+
+    def _contains_negative(self, literal):
+        if literal.is_not() or literal.is_distinct():
+            return True
+        for child in literal.children:
+            if self._contains_negative(child):
+                return True
+        return False
 
     ### DETERMINE RULE DEPENDENCIES:
 
