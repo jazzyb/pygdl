@@ -24,6 +24,10 @@ class Parser(object):
     def __init__(self):
         self.head = ASTNode()
 
+    @staticmethod
+    def run_parse(tokens):
+        return Parser().parse(tokens)
+
     def parse(self, tokens):
         new_sentence = False
         curr = self.head

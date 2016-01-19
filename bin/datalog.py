@@ -13,8 +13,8 @@ database = Database()
 for filename in sys.argv[1:]:
     # read in any files from the command line
     with open(filename, 'r') as file:
-        tokens = Lexer().lex(file=file)
-    for tree in Parser().parse(tokens):
+        tokens = Lexer.run_lex(file=file)
+    for tree in Parser.run_parse(tokens):
 #        print(tree)
         database.define(tree)
 
@@ -33,10 +33,10 @@ try:
 
 #        print('-' * 20)
 #        print(raw_string)
-        tokens = Lexer().lex(raw_string)
+        tokens = Lexer.run_lex(data=raw_string)
 #        print(tokens)
         try:
-            trees = Parser().parse(tokens)
+            trees = Parser.run_parse(tokens)
         except ParseError as err:
             print('\nerror: ', err)
             continue

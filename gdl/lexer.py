@@ -64,6 +64,10 @@ class Lexer(object):
         self.values = []
         self.wsre = re.compile(r'\s')
 
+    @staticmethod
+    def run_lex(**kwargs):
+        return Lexer().lex(**kwargs)
+
     def lex(self, data=None, file=None):
         if file is None:
             if data is None:
