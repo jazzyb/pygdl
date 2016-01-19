@@ -194,8 +194,10 @@ class Database(object):
     def _evaluate_distinct(self, a, b, variables):
         new_variables = []
         for var_dict in variables:
-            acopy = self._vars_to_consts(a.copy(), var_dict)
-            bcopy = self._vars_to_consts(b.copy(), var_dict)
+            term_dict = {k: var_dict[k].term for k in var_dict}
+            acopy, bcopy = a.copy(), b.copy()
+            acopy.set_variables(term_dict)
+            bcopy.set_variables(term_dict)
             if acopy != bcopy:
                 new_variables.append(var_dict)
         return new_variables
@@ -213,16 +215,13 @@ class Database(object):
     def _set_variables(self, args, variables):
         ret = []
         for var_dict in variables:
-            ret.append([self._vars_to_consts(arg.copy(), var_dict) \
-                    for arg in args])
+            var_dict = {k: var_dict[k].term for k in var_dict}
+            ret.append([])
+            for arg in args:
+                copy = arg.copy()
+                copy.set_variables(var_dict)
+                ret[-1].append(copy)
         return ret
-
-    def _vars_to_consts(self, node, var_dict):
-        if node.is_variable():
-            node.token.value = var_dict[node.term].term
-        for child in node.children:
-            self._vars_to_consts(child, var_dict)
-        return node
 
     ### FACT VALIDATION:
 

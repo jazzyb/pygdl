@@ -43,6 +43,12 @@ class ASTNode(object):
         head.children = [child.copy() for child in self.children]
         return head
 
+    def set_variables(self, variable_dict):
+        if self.is_variable():
+            self.token.value = variable_dict[self.term]
+        for child in self.children:
+            child.set_variables(variable_dict)
+
     def __eq__(self, other):
         if self.predicate != other.predicate:
             return False

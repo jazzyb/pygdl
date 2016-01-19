@@ -61,6 +61,12 @@ class MockNode(object):
     def copy(self):
         return MockNode(self.token.copy(), [x.copy() for x in self.children])
 
+    def set_variables(self, variable_dict):
+        if self.is_variable():
+            self.token.value = variable_dict[self.term]
+        for child in self.children:
+            child.set_variables(variable_dict)
+
     def __eq__(self, other):
         if (self.term, self.arity) != (other.term, other.arity):
             return False
