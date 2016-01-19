@@ -229,16 +229,19 @@ class Database(object):
         if type(args) is not list:
             raise TypeError('fact arguments should be a list')
         for arg in args:
-            if arg.arity > 0:
-                self._sanity_check_fact_arguments(arg.children)
             if arg.is_variable():
                 raise DatalogError(GDLError.FACT_VARIABLE, arg.token)
+            if arg.is_not() or arg.is_distinct() or arg.is_or():
+                raise DatalogError(GDLError.FACT_RESERVED % arg.term, arg.token)
+            if arg.arity > 0:
+                self._sanity_check_fact_arguments(arg.children)
 
     ### RULE VALIDATION:
 
     def _sanity_check_new_rule(self, term, arity, args, body):
         self._check_negative_variables(args, body)
         self._check_negative_cycles(term, arity, body)
+        self._check_reserved_rule_arguments(args)
 
     def _check_negative_variables(self, args, body):
         pos_vars = []
@@ -309,3 +312,10 @@ class Database(object):
                 if self._follow_sentence(sentence, visited):
                     return True
         return False
+
+    def _check_reserved_rule_arguments(self, args):
+        for arg in args:
+            if arg.is_not() or arg.is_distinct() or arg.is_or():
+                raise DatalogError(GDLError.RULE_HEAD_RESERVED % arg.term, arg.token)
+            if arg.arity > 0:
+                self._check_reserved_rule_arguments(arg.children)

@@ -11,6 +11,8 @@ class GDLError(Exception):
     DOUBLE_NOT = "Double negatives aren't not disallowed."
     NEGATIVE_VARIABLE = "'%s' must appear in a positive literal in the body."
     NEGATIVE_CYCLE = 'Literal in rule creates a recursive cycle with at least one negative edge.'
+    FACT_RESERVED = "Reserved keyword '%s' is not allowed in facts."
+    RULE_HEAD_RESERVED = "Reserved keyword '%s' is not allowed in the head of a rule."
 
     def __init__(self, message, token):
         errmsg = message + os.linesep + self._errmsg(token)

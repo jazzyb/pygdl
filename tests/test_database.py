@@ -274,3 +274,13 @@ class TestDatabase(unittest.TestCase):
         self.db.define_rule('r_', 1, [make_mock_node('?x')], [p])
         with self.assertRaises(DatalogError):
             self.db.define_rule('q_', 1, [make_mock_node('?x')], [x, make_mock_node('not', [r])])
+
+    def test_reserved_word_in_fact_error(self):
+        not4 = make_mock_node('not', [make_mock_node('4')])
+        with self.assertRaises(DatalogError):
+            self.db.define_fact('x', 1, [not4])
+
+    def test_reserved_word_in_fact_error(self):
+        q = make_mock_node('q_', [make_mock_node('?x')])
+        with self.assertRaises(DatalogError):
+            self.db.define_rule('p_', 1, [make_mock_node('not', [make_mock_node('?x')])], [q])
