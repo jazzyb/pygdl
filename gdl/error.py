@@ -10,6 +10,7 @@ class GDLError(Exception):
     NO_PREDICATE = "No such predicate '%s/%d'."
     DOUBLE_NOT = "Double negatives aren't not disallowed."
     NEGATIVE_VARIABLE = "'%s' must appear in a positive literal in the body."
+    NEGATIVE_CYCLE = 'Literal in rule creates a recursive cycle with at least one negative edge.'
 
     def __init__(self, message, token):
         errmsg = message + os.linesep + self._errmsg(token)

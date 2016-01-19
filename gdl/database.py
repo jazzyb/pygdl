@@ -22,7 +22,7 @@ class Database(object):
         self._delete_derived_facts(pred)
 
     def define_rule(self, term, arity, args, body):
-        self._sanity_check_new_rule(args, body)
+        self._sanity_check_new_rule(term, arity, args, body)
         pred = (term, arity)
         self.rules.setdefault(pred, []).append((args, body))
         self._set_rule_requirements(pred, body)
@@ -237,10 +237,11 @@ class Database(object):
 
     ### RULE VALIDATION:
 
-    def _sanity_check_new_rule(self, args, body):
-        self._validate_variables(args, body)
+    def _sanity_check_new_rule(self, term, arity, args, body):
+        self._check_negative_variables(args, body)
+        self._check_negative_cycles(term, arity, body)
 
-    def _validate_variables(self, args, body):
+    def _check_negative_variables(self, args, body):
         pos_vars = []
         for sentence in body:
             pos_vars.extend(self._collect_positive_variables(sentence))
@@ -274,3 +275,38 @@ class Database(object):
         for child in node.children:
             neg_vars.extend(self._collect_negative_variables(child))
         return neg_vars
+
+    def _check_negative_cycles(self, term, arity, body):
+        for sentence in body:
+            if self._follow_sentence(sentence, [(term, arity)]):
+                raise DatalogError(GDLError.NEGATIVE_CYCLE, sentence.token)
+
+    def _follow_sentence(self, sentence, visited):
+        if sentence.is_not():
+            pred = sentence.children[0].predicate
+            if self._find_neg_cycle(pred, visited + [pred, None]):
+                return True
+        elif sentence.is_distinct() or sentence.is_or():
+            a, b = [x.predicate for x in sentence.children]
+            if self._find_neg_cycle(a, visited + [a]) or \
+                    self._find_neg_cycle(b, visited + [b]):
+                return True
+        else:
+            pred = sentence.predicate
+            if self._find_neg_cycle(pred, visited + [pred]):
+                return True
+        return False
+
+    def _find_neg_cycle(self, pred, visited):
+        if pred == visited[0] and None in visited:
+            return True
+        if visited[-1] is None:
+            if pred in visited[:-2]:
+                return False
+        elif pred in visited[:-1]:
+            return False
+        for _, body in self.rules.get(pred, []):
+            for sentence in body:
+                if self._follow_sentence(sentence, visited):
+                    return True
+        return False

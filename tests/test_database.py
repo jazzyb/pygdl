@@ -249,9 +249,22 @@ class TestDatabase(unittest.TestCase):
         results = [{k: d[k].term for k in d} for d in self.db.query(query)]
         self.assertNotIn({'?x': 4, '?y': 4}, results)
 
-    def test_variable_in_negative_rule_error(self):
+    def test_negative_variable_error(self):
         distinct = make_mock_node('distinct', [make_mock_node('?x'), make_mock_node('?y')])
         path = make_mock_node('path', [make_mock_node('?z'), make_mock_node('?y')])
         body = [path, distinct]
         with self.assertRaises(DatalogError):
             self.db.define_rule('diff', 2, [make_mock_node('?x'), make_mock_node('?y')], body)
+
+    def test_negative_cycle_error(self):
+        # > p_(X) :- q_(X)
+        # > r_(X) :- p_(X)
+        # > q_(X) :- x_(X), ~r_(X)
+        p = make_mock_node('p_', [make_mock_node('?x')])
+        q = make_mock_node('q_', [make_mock_node('?x')])
+        r = make_mock_node('r_', [make_mock_node('?x')])
+        x = make_mock_node('x_', [make_mock_node('?x')])
+        self.db.define_rule('p_', 1, [make_mock_node('?x')], [q])
+        self.db.define_rule('r_', 1, [make_mock_node('?x')], [p])
+        with self.assertRaises(DatalogError):
+            self.db.define_rule('q_', 1, [make_mock_node('?x')], [x, make_mock_node('not', [r])])
