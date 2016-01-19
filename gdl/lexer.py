@@ -13,6 +13,12 @@ class Lexeme(object):
         self.lineno = lineno
         self.column = col
 
+    @staticmethod
+    def new(string):
+        token = Lexeme(None, None, None)
+        token.set(value=string)
+        return token
+
     def set(self, filename=None, line=None, lineno=None, column=None, value=None):
         if filename:
             self.filename = filename
