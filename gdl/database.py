@@ -1,3 +1,4 @@
+from functools import reduce
 from gdl.error import GDLError
 
 
@@ -103,21 +104,28 @@ class Database(object):
             return []
         if pred in self.derived_facts:
             return self._find_facts(self.derived_facts[pred], query)
-        self._process_rule(pred)
+
+        new_facts = self._process_rule(pred)
+        for key in new_facts:
+            self.derived_facts[key] = new_facts[key]
+
         return self._find_facts(self.derived_facts.get(pred, []), query)
 
     def _process_rule(self, rule, facts=None, rules=None):
         rules = rules or []
         facts = facts or {}
         nfacts = -1
-        while len(facts.get(rule, [])) > nfacts:
-            nfacts = len(facts.get(rule, []))
+        while self._num_facts(facts) > nfacts:
+            nfacts = self._num_facts(facts)
             for args, body in self.rules[rule]:
                 variables = self._evaluate_body(body, facts, rules + [rule])
                 for fact in self._set_variables(args, variables):
                     if fact not in facts.get(rule, []):
                         facts.setdefault(rule, []).append(fact)
-        self.derived_facts[rule] = facts.get(rule, [])
+        return facts
+
+    def _num_facts(self, facts):
+        return reduce(lambda total, key: total + len(facts.get(key, [])), facts, 0)
 
     def _evaluate_body(self, body, facts, rules):
         variables = [None]
@@ -142,7 +150,7 @@ class Database(object):
     def _iter_var_results(self, literal, variables, facts, rules):
         pred = literal.predicate
         if self._needs_processing(pred, rules):
-            self._process_rule(pred, facts, rules)
+            facts = self._process_rule(pred, facts, rules)
         table = self.facts.get(pred, []) + \
                 self.derived_facts.get(pred, []) + \
                 facts.get(pred, [])
