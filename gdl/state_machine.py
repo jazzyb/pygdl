@@ -5,7 +5,10 @@ from gdl.parser import Parser
 
 
 class GameError(Exception):
-    pass
+    NO_PLAYERS = "Players must be defined with 'role/1'"
+    NO_SUCH_PLAYER = "No such player: '%s'"
+    DOUBLE_MOVE = "'%s' has already moved this turn"
+    ILLEGAL_MOVE = "Not a legal move: '(does %s %s)'"
 
 
 class StateMachine(object):
@@ -14,28 +17,30 @@ class StateMachine(object):
         self.players = set()
         self.moves = set()
 
+    ## PUBLIC API
+
     def store(self, **kwargs):
         self.db = self.db or Database()
         tokens = Lexer.run_lex(**kwargs)
         for tree in Parser.run_parse(tokens):
             if tree.is_init():
-                tree.token.value = 'true'
+                tree.token.set(value='true')
             self.db.define(tree)
         try:
             roles = self.db.facts[('role', 1)]
         except KeyError:
-            raise GameError("Players must be defined with 'role/1'")
+            raise GameError(GameError.NO_PLAYERS)
         self.players = set([str(x[0]) for x in roles])
 
     def move(self, player, move):
         if player not in self.players:
-            raise GameError("No such player: '%s'" % player)
+            raise GameError(GameError.NO_SUCH_PLAYER % player)
         if player in self.moves:
-            raise GameError("'%s' has already moved this turn" % player)
-        move = Parser.run_parse(Lexer.run_lex(data=move))[0]
+            raise GameError(GameError.DOUBLE_MOVE % player)
+        move = self._single_move_to_ast(move)
         player = ASTNode.new(player)
         if not self._legal(player, move):
-            raise GameError("Not a legal move: '(does %s %s)'" % (player, move))
+            raise GameError(GameError.ILLEGAL_MOVE % (player, move))
         self.db.define_fact('does', 2, [player, move])
         self.moves.add(player.term)
 
@@ -56,21 +61,21 @@ class StateMachine(object):
         pass
 
     def legal(self, player='?player', move='?move'):
-        move = Parser.run_parse(Lexer.run_lex(data=move))
+        move = self._single_move_to_ast(move)
         player = ASTNode.new(player)
         results = self._legal(player, move)
-        if player.is_variable():
+        if results is True or results is False:
+            return results
+        elif player.is_variable():
             ret = {}
             for var_dict in results:
                 move_str = str(var_dict[move.term])
-                ret.setdefault(var_dict[player.term], []).append(move_str)
+                ret.setdefault(var_dict[player.term].term, []).append(move_str)
             return ret
-        elif results is True or results is False:
-            return results
         return [str(res[move.term]) for res in results]
 
     def is_terminal(self):
-        pass
+        return self.db.query(ASTNode.new('terminal'))
 
     ## HELPERS
 
@@ -78,3 +83,6 @@ class StateMachine(object):
         legal = ASTNode.new('legal')
         legal.children = [player, move]
         return self.db.query(legal)
+
+    def _single_move_to_ast(self, move):
+        return Parser.run_parse(Lexer.run_lex(data=move))[0]

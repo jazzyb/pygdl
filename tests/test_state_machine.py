@@ -108,3 +108,83 @@ class TestStateMachine(unittest.TestCase):
         fsm.store(data=data)
         with self.assertRaises(GameError):
             fsm.move('x', '2')
+
+    def test_legal_player_and_move_success(self):
+        fsm = StateMachine()
+        data = '''
+        (role x)
+        (init 1)
+        (<= (legal x ?x) (true ?x))
+        '''
+        fsm.store(data=data)
+        self.assertTrue(fsm.legal(player='x', move='1'))
+
+    def test_legal_player_and_move_failure(self):
+        fsm = StateMachine()
+        data = '''
+        (role x)
+        (init 1)
+        (<= (legal x ?x) (true ?x))
+        '''
+        fsm.store(data=data)
+        self.assertFalse(fsm.legal(player='x', move='2'))
+
+    def test_legal_no_such_player(self):
+        fsm = StateMachine()
+        data = '''
+        (role x)
+        (init 1)
+        (<= (legal x ?x) (true ?x))
+        '''
+        fsm.store(data=data)
+        self.assertFalse(fsm.legal(player='o', move='1'))
+
+    def test_legal_player_moves(self):
+        fsm = StateMachine()
+        data = '''
+        (role x)
+        (role o)
+        (init 1) (init 2) (init 3) (init 4)
+        (even 2) (even 4)
+        (odd 1) (odd 3)
+        (<= (legal x ?x) (true ?x) (even ?x))
+        (<= (legal o ?x) (true ?x) (odd ?x))
+        '''
+        fsm.store(data=data)
+        self.assertEqual(['2', '4'], fsm.legal(player='x'))
+
+    def test_legal_all_moves(self):
+        fsm = StateMachine()
+        data = '''
+        (role x)
+        (role o)
+        (init 1) (init 2) (init 3) (init 4)
+        (even 2) (even 4)
+        (odd 1) (odd 3)
+        (<= (legal x ?x) (true ?x) (even ?x))
+        (<= (legal o ?x) (true ?x) (odd ?x))
+        '''
+        fsm.store(data=data)
+        self.assertEqual({'x': ['2', '4'], 'o': ['1', '3']}, fsm.legal())
+
+    def test_is_terminal_success(self):
+        fsm = StateMachine()
+        data = '''
+        (role x)
+        (init (control x))
+        (init (cell x))
+        (<= terminal (true (control ?x)) (true (cell ?x)))
+        '''
+        fsm.store(data=data)
+        self.assertTrue(fsm.is_terminal())
+
+    def test_is_terminal_failure(self):
+        fsm = StateMachine()
+        data = '''
+        (role x)
+        (init (control x))
+        (init (cell o))
+        (<= terminal (true (control ?x)) (true (cell ?x)))
+        '''
+        fsm.store(data=data)
+        self.assertFalse(fsm.is_terminal())

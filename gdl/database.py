@@ -122,7 +122,10 @@ class Database(object):
                 else:
                     matches[query.term] = fact.copy()
             elif query.predicate == fact.predicate:
-                if self._compare_fact(query.children, fact.children, matches) is False:
+                result = self._compare_fact(query.children, fact.children, matches)
+                if type(result) is dict:
+                    matches.update(result)
+                elif result is False:
                     return False
             else:
                 return False
@@ -175,7 +178,6 @@ class Database(object):
             return self._evaluate_distinct(a, b, variables)
         elif literal.is_or():
             return self._evaluate_or(literal, variables, facts, rules)
-
         return self._evaluate_literal(literal, variables, facts, rules)
 
     def _iter_var_results(self, literal, variables, facts, rules):
@@ -207,6 +209,7 @@ class Database(object):
         for child in literal.children:
             if child.is_variable():
                 has_variable = True
+                break
 
         new_varlist = []
         for results, var_dict in self._iter_var_results(literal, variables, facts, rules):
