@@ -47,6 +47,19 @@ class TestStateMachine(unittest.TestCase):
         with self.assertRaises(GameError):
             fsm.store(data=data)
 
+    def test_store_true_error(self):
+        fsm = StateMachine()
+        data = '''
+        (role x)
+        (role o)
+        (true (cell a))
+        (true (cell b))
+        (true (cell c))
+        (true (cell d))
+        '''
+        with self.assertRaises(GameError):
+            fsm.store(data=data)
+
     def test_move_player(self):
         fsm = StateMachine()
         data = '''

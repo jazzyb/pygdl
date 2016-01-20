@@ -48,6 +48,9 @@ class ASTNode(object):
     def is_init(self):
         return self.token.is_init()
 
+    def is_true(self):
+        return self.token.is_true()
+
     def copy(self):
         head = ASTNode(self.token.copy())
         head.children = [child.copy() for child in self.children]

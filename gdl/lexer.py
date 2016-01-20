@@ -55,6 +55,9 @@ class Lexeme(object):
     def is_init(self):
         return self.value == 'init'
 
+    def is_true(self):
+        return self.value == 'true'
+
     def is_variable(self):
         return self.value[0] == '?'
 

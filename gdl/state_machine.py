@@ -9,6 +9,7 @@ class GameError(Exception):
     NO_SUCH_PLAYER = "No such player: '%s'"
     DOUBLE_MOVE = "'%s' has already moved this turn"
     ILLEGAL_MOVE = "Not a legal move: '(does %s %s)'"
+    NO_TRUE_ALLOWED = "'true' facts are not allowed.  Use 'init/1' instead."
 
 
 class StateMachine(object):
@@ -23,7 +24,9 @@ class StateMachine(object):
         self.db = self.db or Database()
         tokens = Lexer.run_lex(**kwargs)
         for tree in Parser.run_parse(tokens):
-            if tree.is_init():
+            if tree.is_true():
+                raise GameError(GameError.NO_TRUE_ALLOWED)
+            elif tree.is_init():
                 tree.token.set(value='true')
             self.db.define(tree)
         try:
