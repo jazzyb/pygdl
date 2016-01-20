@@ -44,8 +44,6 @@ class StateMachine(object):
         self.db.define_fact('does', 2, [player, move])
         self.moves.add(player.term)
 
-    # TODO: vvvvvvvvvvvvv  WRITE / TEST  vvvvvvvvvvvvvv
-
     def next(self):
         # 1. Get list of players ('role')
         # 2. Make sure there is a 'does' for each player
@@ -57,22 +55,33 @@ class StateMachine(object):
         pass
 
     def score(self, player='?player'):
-        # Query 'goal'
-        pass
+        player = ASTNode.new(player)
+        if not player.is_variable() and player.term not in self.players:
+            raise GameError(GameError.NO_SUCH_PLAYER % player.term)
+        score = ASTNode.new('?score')
+        goal = ASTNode.new('goal')
+        goal.children = [player, score]
+        results = self.db.query(goal)
+        if not player.is_variable():
+            return int(results[0][score.term].term)
+        ret = {}
+        for var_dict in results:
+            ret[var_dict[player.term].term] = int(var_dict[score.term].term)
+        return ret
 
     def legal(self, player='?player', move='?move'):
         move = self._single_move_to_ast(move)
         player = ASTNode.new(player)
         results = self._legal(player, move)
-        if results is True or results is False:
+        if type(results) is bool:
             return results
-        elif player.is_variable():
-            ret = {}
-            for var_dict in results:
-                move_str = str(var_dict[move.term])
-                ret.setdefault(var_dict[player.term].term, []).append(move_str)
-            return ret
-        return [str(res[move.term]) for res in results]
+        elif not player.is_variable():
+            return [str(res[move.term]) for res in results]
+        ret = {}
+        for var_dict in results:
+            move_str = str(var_dict[move.term])
+            ret.setdefault(var_dict[player.term].term, []).append(move_str)
+        return ret
 
     def is_terminal(self):
         return self.db.query(ASTNode.new('terminal'))

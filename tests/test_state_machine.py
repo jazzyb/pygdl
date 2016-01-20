@@ -188,3 +188,37 @@ class TestStateMachine(unittest.TestCase):
         '''
         fsm.store(data=data)
         self.assertFalse(fsm.is_terminal())
+
+    def test_score_player(self):
+        fsm = StateMachine()
+        data = '''
+        (role x)
+        (init (control x))
+        (<= (goal ?player 100) (true (control ?player)))
+        '''
+        fsm.store(data=data)
+        self.assertEqual(100, fsm.score('x'))
+
+    def test_score_no_such_player_error(self):
+        fsm = StateMachine()
+        data = '''
+        (role x)
+        (init (control x))
+        (<= (goal ?player 100) (true (control ?player)))
+        '''
+        fsm.store(data=data)
+        with self.assertRaises(GameError):
+            fsm.score('o')
+
+    def test_score_all_players(self):
+        fsm = StateMachine()
+        data = '''
+        (role x)
+        (role o)
+        (init (control x))
+        (enemies x o) (enemies o x)
+        (<= (goal ?player 100) (true (control ?player)))
+        (<= (goal ?player 0) (true (control ?other)) (enemies ?player ?other))
+        '''
+        fsm.store(data=data)
+        self.assertEqual({'x': 100, 'o': 0}, fsm.score())
