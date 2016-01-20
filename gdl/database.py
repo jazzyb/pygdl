@@ -51,6 +51,14 @@ class Database(object):
         results = facts + derived_facts
         return results if results else False
 
+    def copy(self):
+        copy = Database()
+        copy.facts = self.facts.copy()
+        copy.derived_facts = self.derived_facts.copy()
+        copy.rules = self.rules.copy()
+        copy.requirements = self.requirements.copy()
+        return copy
+
     ## HELPERS
 
     def _move_negative_sentences_to_end(self, body):

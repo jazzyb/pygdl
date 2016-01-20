@@ -10,6 +10,7 @@ class GameError(Exception):
     DOUBLE_MOVE = "'%s' has already moved this turn"
     ILLEGAL_MOVE = "Not a legal move: '(does %s %s)'"
     NO_TRUE_ALLOWED = "'true' facts are not allowed.  Use 'init/1' instead."
+    NO_MOVES = 'The following players have not moved: %s.'
 
 
 class StateMachine(object):
@@ -48,14 +49,29 @@ class StateMachine(object):
         self.moves.add(player.term)
 
     def next(self):
-        # 1. Get list of players ('role')
-        # 2. Make sure there is a 'does' for each player
-        # 3. Calculate the new 'true' facts by querying for 'next'
-        # 4. Copy the database
-        # 5. Delete the 'does' and 'true' facts as well as all derived_facts
-        # 6. Replace 'true' facts with 'next' facts
-        # 7. Return a copy of the engine with new database
-        pass
+        if self.players != self.moves:
+            players = ', '.join(self.players - self.moves)
+            raise GameError(GameError.NO_MOVES % players)
+
+        # calculate the new 'true' facts by querying for 'next'
+        state = ASTNode.new('?state')
+        next_query = ASTNode.new('next')
+        next_query.children = [state]
+        next_facts = [d[state.term] for d in self.db.query(next_query)]
+
+        new_db = self.db.copy()
+        # delete the 'does', 'true', and derived facts
+        new_db.derived_facts = {}
+        new_db.facts.pop(('true', 1))
+        new_db.facts.pop(('does', 2))
+
+        # replace 'true' facts with 'next' facts
+        for fact in next_facts:
+            new_db.define_fact('true', 1, [fact])
+
+        next = StateMachine(new_db)
+        next.players = self.players
+        return next
 
     def score(self, player='?player'):
         player = ASTNode.new(player)

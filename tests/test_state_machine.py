@@ -235,3 +235,57 @@ class TestStateMachine(unittest.TestCase):
         '''
         fsm.store(data=data)
         self.assertEqual({'x': 100, 'o': 0}, fsm.score())
+
+    def test_next(self):
+        fsm = StateMachine()
+        data = '''
+        (role x)
+        (role o)
+        (init (control x))
+        (init (cell 0 0 b))
+        (init (cell 0 1 b))
+        (init (cell 1 0 b))
+        (init (cell 1 1 b))
+
+        (<= (legal ?player (mark ?x ?y))
+            (true (cell ?x ?y b))
+            (true (control ?player)))
+        (<= (legal x noop) (true (control o)))
+        (<= (legal o noop) (true (control x)))
+
+        ; swap control on every turn
+        (<= (next (control x)) (true (control o)))
+        (<= (next (control o)) (true (control x)))
+
+        (<= (next (cell ?x ?y ?player))
+            (does ?player (mark ?x ?y))
+            (true (cell ?x ?y b)))
+
+        (<= (next (cell ?x ?y b))
+            (does ?player (mark ?m ?n))
+            (true (cell ?x ?y b))
+            (or (distinct ?m ?x) (distinct ?n ?y)))
+        '''
+        fsm.store(data=data)
+        fsm.move('x', '(mark 0 0)')
+        fsm.move('o', 'noop')
+        next = fsm.next()
+        fsm.db.facts = {}
+        states = [str(x[0]) for x in next.db.facts[('true', 1)]]
+        self.assertIn('(cell 0 0 x)', states)
+        self.assertIn('(control o)', states)
+        self.assertNotIn(('does', 2), next.db.facts)
+
+    def test_next_no_moves_error(self):
+        fsm = StateMachine()
+        data = '''
+        (role x)
+        (role o)
+        (init (cell a))
+        (init (cell b))
+        (init (cell c))
+        (init (cell d))
+        '''
+        fsm.store(data=data)
+        with self.assertRaises(GameError):
+            fsm.next()
