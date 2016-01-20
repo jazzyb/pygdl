@@ -2,7 +2,6 @@ import unittest
 from gdl import StateMachine, GameError
 
 # FIXME:  needs fakes or mocks or something else instead
-from gdl.lexer import Lexeme
 from gdl.ast import ASTNode
 
 
@@ -18,8 +17,8 @@ class TestStateMachine(unittest.TestCase):
         (init (cell d))
         '''
         fsm.store(data=data)
-        query = ASTNode(Lexeme.new('true'))
-        query.children = [ASTNode(Lexeme.new('?state'))]
+        query = ASTNode.new('true')
+        query.children = [ASTNode.new('?state')]
         results = [{k: str(d[k]) for k in d} for d in fsm.db.query(query)]
         for i in ('a', 'b', 'c', 'd'):
             self.assertIn({'?state': '(cell %s)' % i}, results)
@@ -57,8 +56,8 @@ class TestStateMachine(unittest.TestCase):
         '''
         fsm.store(data=data)
         fsm.move('x', '1')
-        query = ASTNode(Lexeme.new('does'))
-        query.children = [ASTNode(Lexeme.new(x)) for x in ('x', '1')]
+        query = ASTNode.new('does')
+        query.children = [ASTNode.new(x) for x in ('x', '1')]
         self.assertTrue(fsm.db.query(query))
 
     def test_move_player_complex(self):
@@ -70,10 +69,10 @@ class TestStateMachine(unittest.TestCase):
         '''
         fsm.store(data=data)
         fsm.move('x', '(cell 1 1 b)')
-        cell = ASTNode(Lexeme.new('cell'))
-        cell.children = [ASTNode(Lexeme.new(x)) for x in ('1', '1', 'b')]
-        query = ASTNode(Lexeme.new('does'))
-        query.children = [ASTNode(Lexeme.new('x')), cell]
+        cell = ASTNode.new('cell')
+        cell.children = [ASTNode.new(x) for x in ('1', '1', 'b')]
+        query = ASTNode.new('does')
+        query.children = [ASTNode.new('x'), cell]
         self.assertTrue(fsm.db.query(query))
 
     def test_move_nonexistent_player_error(self):

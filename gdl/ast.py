@@ -1,7 +1,14 @@
+from gdl.lexer import Lexeme
+
+
 class ASTNode(object):
     def __init__(self, token=None):
         self.token = token
         self.children = []
+
+    @staticmethod
+    def new(value):
+        return ASTNode(Lexeme.new(value))
 
     def create_child(self, token):
         child = ASTNode(token)

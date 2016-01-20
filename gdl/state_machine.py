@@ -1,6 +1,6 @@
 from gdl.ast import ASTNode
 from gdl.database import Database
-from gdl.lexer import Lexer, Lexeme
+from gdl.lexer import Lexer
 from gdl.parser import Parser
 
 
@@ -33,7 +33,7 @@ class StateMachine(object):
         if player in self.moves:
             raise GameError("'%s' has already moved this turn" % player)
         move = Parser.run_parse(Lexer.run_lex(data=move))[0]
-        player = ASTNode(Lexeme.new(player))
+        player = ASTNode.new(player)
         if not self._legal(player, move):
             raise GameError("Not a legal move: '(does %s %s)'" % (player, move))
         self.db.define_fact('does', 2, [player, move])
@@ -57,7 +57,7 @@ class StateMachine(object):
 
     def legal(self, player='?player', move='?move'):
         move = Parser.run_parse(Lexer.run_lex(data=move))
-        player = ASTNode(Lexeme.new(player))
+        player = ASTNode.new(player)
         results = self._legal(player, move)
         if player.is_variable():
             ret = {}
@@ -75,6 +75,6 @@ class StateMachine(object):
     ## HELPERS
 
     def _legal(self, player, move):
-        legal = ASTNode(Lexeme.new('legal'))
+        legal = ASTNode.new('legal')
         legal.children = [player, move]
         return self.db.query(legal)
