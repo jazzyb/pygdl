@@ -1,5 +1,6 @@
+from gdl.ast import ASTNode
 from gdl.database import Database
-from gdl.lexer import Lexeme
+from gdl.lexer import Lexer, Lexeme
 from gdl.parser import Parser
 
 
@@ -17,24 +18,28 @@ class StateMachine(object):
         self.db = self.db or Database()
         tokens = Lexer.run_lex(**kwargs)
         for tree in Parser.run_parse(tokens):
+            if tree.is_init():
+                tree.token.value = 'true'
             self.db.define(tree)
         try:
             roles = self.db.facts[('role', 1)]
         except KeyError:
             raise GameError("Players must be defined with 'role/1'")
-        self.players = set([str(x) for x in roles])
+        self.players = set([str(x[0]) for x in roles])
 
     def move(self, player, move):
         if player not in self.players:
             raise GameError("No such player: '%s'" % player)
         if player in self.moves:
             raise GameError("'%s' has already moved this turn" % player)
-        move = Parser.run_parse(Lexer.run_lex(move))
+        move = Parser.run_parse(Lexer.run_lex(data=move))[0]
         player = ASTNode(Lexeme.new(player))
         if not self._legal(player, move):
             raise GameError("Not a legal move: '(does %s %s)'" % (player, move))
         self.db.define_fact('does', 2, [player, move])
-        self.moves.add(player)
+        self.moves.add(player.term)
+
+    # TODO: vvvvvvvvvvvvv  WRITE / TEST  vvvvvvvvvvvvvv
 
     def next(self):
         # 1. Get list of players ('role')
@@ -51,7 +56,7 @@ class StateMachine(object):
         pass
 
     def legal(self, player='?player', move='?move'):
-        move = Parser.run_parse(Lexer.run_lex(move))
+        move = Parser.run_parse(Lexer.run_lex(data=move))
         player = ASTNode(Lexeme.new(player))
         results = self._legal(player, move)
         if player.is_variable():

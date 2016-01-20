@@ -52,6 +52,9 @@ class Lexeme(object):
     def is_or(self):
         return self.value == 'or'
 
+    def is_init(self):
+        return self.value == 'init'
+
     def is_variable(self):
         return self.value[0] == '?'
 

@@ -36,3 +36,7 @@
 
 ;;; NEGATIVE IN FRONT
 (<= (not-y ?x) (not (s ?x)) (x ?x))
+
+;;; PROBLEM #3
+(true (cell 1 1 o))
+(<= (legal x ?x) (true ?x))

@@ -219,11 +219,7 @@ class Database(object):
     def _evaluate_distinct(self, a, b, variables):
         new_variables = []
         for var_dict in map(lambda x: x or {}, variables):
-            term_dict = {k: var_dict[k].term for k in var_dict}
-            acopy, bcopy = a.copy(), b.copy()
-            acopy.set_variables(term_dict)
-            bcopy.set_variables(term_dict)
-            if acopy != bcopy:
+            if a.set_variables(var_dict) != b.set_variables(var_dict):
                 new_variables.append(var_dict)
         return new_variables
 
@@ -240,11 +236,7 @@ class Database(object):
     def _set_variables(self, args, variables):
         ret = []
         for var_dict in map(lambda x: x or {}, variables):
-            ret.append([])
-            for arg in args:
-                copy = arg.copy()
-                copy.set_variables({k: var_dict[k].term for k in var_dict})
-                ret[-1].append(copy)
+            ret.append([arg.set_variables(var_dict) for arg in args])
         return ret
 
     ### FACT VALIDATION:

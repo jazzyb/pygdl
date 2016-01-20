@@ -38,6 +38,9 @@ class ASTNode(object):
     def is_or(self):
         return self.token.is_or()
 
+    def is_init(self):
+        return self.token.is_init()
+
     def copy(self):
         head = ASTNode(self.token.copy())
         head.children = [child.copy() for child in self.children]
@@ -45,9 +48,12 @@ class ASTNode(object):
 
     def set_variables(self, variable_dict):
         if self.is_variable():
-            self.token.value = variable_dict[self.term]
-        for child in self.children:
-            child.set_variables(variable_dict)
+            copy = variable_dict[self.term].copy()
+        else:
+            copy = ASTNode(self.token.copy())
+            copy.children = [child.set_variables(variable_dict) \
+                    for child in self.children]
+        return copy
 
     def __eq__(self, other):
         if self.predicate != other.predicate:
