@@ -8,10 +8,12 @@ class ParseError(GDLError):
 
 class Parser(object):
     RESERVED = {
+        'base':     1,
         'distinct': 2,
         'does':     2,
         'goal':     2,
         'init':     1,
+        'input':    2,
         'legal':    2,
         'next':     1,
         'not':      1,
