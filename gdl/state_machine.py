@@ -30,7 +30,9 @@ class StateMachine(object):
             if tree.is_true():
                 raise GameError(GameError.NO_TRUE_ALLOWED)
             elif tree.is_init():
-                tree.token.set(value='true')
+                true = tree.copy()
+                true.token.set(value='true')
+                self.db.define(true)
             self.db.define(tree)
         try:
             roles = self.db.facts[('role', 1)]
