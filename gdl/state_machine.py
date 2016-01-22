@@ -84,7 +84,10 @@ class StateMachine(object):
 
     def score(self, player='?player'):
         '''Return the score for a player this turn.  If player is not
-        provided, return a dict of all {player: score}.
+        provided, return a dict of all {player: score}.  If there is no goal
+        defined for this player/state, then return None.
+
+        Raise GameError if player does not exist.
         '''
         player = ASTNode.new(player)
         if not player.is_variable() and player.term not in self.players:
@@ -93,6 +96,8 @@ class StateMachine(object):
         goal = ASTNode.new('goal')
         goal.children = [player, score]
         results = self.db.query(goal)
+        if results is False:
+            return None
         if not player.is_variable():
             return int(results[0][score.term].term)
         ret = {}

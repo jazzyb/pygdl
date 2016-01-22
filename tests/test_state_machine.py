@@ -212,6 +212,17 @@ class TestStateMachine(unittest.TestCase):
         fsm.store(data=data)
         self.assertEqual(100, fsm.score('x'))
 
+    def test_score_player_false(self):
+        fsm = StateMachine()
+        data = '''
+        (role x)
+        (role o)
+        (init (control x))
+        (<= (goal ?player 100) (true (control ?player)))
+        '''
+        fsm.store(data=data)
+        self.assertEqual(None, fsm.score('o'))
+
     def test_score_no_such_player_error(self):
         fsm = StateMachine()
         data = '''
