@@ -132,6 +132,15 @@ class StateMachine(object):
         '''Query terminal/0.'''
         return self.db.query(ASTNode.new('terminal'))
 
+    def __hash__(self):
+        ret = int()
+        true_strings = [str(res[0]) for res in self.db.facts[('true', 1)]]
+        does_strings = [(str(res[0]), str(res[1])) \
+                for res in self.db.facts.get(('does', 2), [])]
+        for state in sorted(true_strings) + sorted(does_strings, key=lambda x: x[0]):
+            ret ^= hash(state)
+        return ret
+
     ## HELPERS
 
     def _legal(self, player, move):

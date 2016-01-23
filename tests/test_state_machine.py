@@ -300,3 +300,39 @@ class TestStateMachine(unittest.TestCase):
         fsm.store(data=data)
         with self.assertRaises(GameError):
             fsm.next()
+
+    def test_hash(self):
+        one = StateMachine()
+        data = '''
+        (role x)
+        (role o)
+        (init (cell a))
+        (init (cell b))
+        (init (cell c))
+        (init (control x))
+        '''
+        one.store(data=data)
+
+        two = StateMachine()
+        data = '''
+        (role x)
+        (role o)
+        (init (cell b))
+        (init (cell a))
+        (init (control x))
+        (init (cell c))
+        '''
+        two.store(data=data)
+        self.assertEqual(hash(one), hash(two))
+
+        three = StateMachine()
+        data = '''
+        (role x)
+        (role o)
+        (init (cell b))
+        (init (cell a))
+        (init (control o))
+        (init (cell c))
+        '''
+        three.store(data=data)
+        self.assertNotEqual(hash(two), hash(three))
