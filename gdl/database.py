@@ -102,7 +102,7 @@ class Database(object):
     ## HELPERS
 
     def _move_negative_sentences_to_end(self, body):
-        '''Make sure 'or' and 'not' sentences in the body come last.'''
+        '''Make sure 'distinct' and 'not' sentences in the body come last.'''
         pos, neg = [], []
         for sentence in body:
             if self._contains_negative(sentence):
@@ -112,7 +112,7 @@ class Database(object):
         return pos + neg
 
     def _contains_negative(self, literal):
-        '''Recursively determine if a literal contains an 'or' or 'distinct'.'''
+        '''Recursively determine if a literal contains a 'not' or 'distinct'.'''
         if literal.is_not() or literal.is_distinct():
             return True
         for child in literal.children:
