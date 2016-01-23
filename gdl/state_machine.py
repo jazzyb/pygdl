@@ -68,11 +68,12 @@ class StateMachine(object):
         next_query.children = [state]
         next_facts = [d[state.term] for d in self.db.query(next_query)]
 
-        new_db = self.db.copy()
         # delete the 'does', 'true', and derived facts
+        self.db.facts.pop(('does', 2))
+        self.moves = set()
+        new_db = self.db.copy()
         new_db.derived_facts = {}
         new_db.facts.pop(('true', 1))
-        new_db.facts.pop(('does', 2))
 
         # replace 'true' facts with 'next' facts
         for fact in next_facts:
